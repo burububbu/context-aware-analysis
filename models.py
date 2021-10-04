@@ -1,16 +1,10 @@
-import numpy as np
-import matplotlib.pyplot as plt
-
-
-from sklearn.model_selection import train_test_split 
 import  matplotlib.pyplot as plt
 
 from sklearn.preprocessing import StandardScaler
 from sklearn.neighbors import KNeighborsRegressor
 from sklearn.model_selection import GridSearchCV
 
-from sklearn.cluster import DBSCAN
-
+from sklearn.cluster import DBSCAN, AgglomerativeClustering
 
 knn_params = {
     'n_neighbors':[5, 10, 20, 30],
@@ -33,7 +27,16 @@ def db_scan(x_data, km_radius):
    
     dbscan_cluster = DBSCAN(eps=epsilon, min_samples=4, algorithm='ball_tree', metric='haversine').fit(x_data)
     
-    return dbscan_cluster    
+    return dbscan_cluster
+
+def agglomerative_cluster(x_data, km_radius):
+    
+    kms_per_radian = 6371.0088
+    epsilon = km_radius / kms_per_radian
+
+    agg_cluster = AgglomerativeClustering(n_clusters=None, compute_full_tree=True, distance_threshold=epsilon).fit(x_data)
+    
+    return agg_cluster 
 
 def train_knn(x_train, y_train):
     model = KNeighborsRegressor()    
