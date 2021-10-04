@@ -1,9 +1,9 @@
-import models
 import os
 
-import numpy as np
 import pandas as pd
 import dataset_handler as dh
+
+from sklearn.model_selection import train_test_split
 
 def main():
     csv_data =  "./data/noises.csv"
@@ -13,21 +13,17 @@ def main():
     
     data = pd.read_csv(csv_data)
 
-    dh.extract_features(data)
+    x_train, x_test, y_train, y_test = train_test_split(
+        data[['longitude', 'latitude']],
+        data['noise'],
+        test_size=0.20,
+        random_state=42)
 
-    data['latitude'] = data['latitude'].map(np.radians) 
-    data['longitude'] = data['longitude'].map(np.radians) 
-    data['noise'] = data['noise'].apply(lambda value: round(value,5))
+    train_dataset = x_train.assign(noise=y_train)
     
-    subsets = dh.create_subsets(data)
-
-    for i,subset in enumerate(subsets):
-        print('subset {0} has {1} samples'.format(i, subset.shape[0]))
-        
-        x_data = subset[['latitude','longitude']]
-        y_data = subset['noise']
-        
-        models.train_knn(x_data, y_data)
+    dh.features_engineering(train_dataset)
+    
+    # subsets = dh.create_subsets(data)
 
 if __name__ == '__main__':
     main()
