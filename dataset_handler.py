@@ -1,7 +1,6 @@
-
-from numpy.core.fromnumeric import shape
-from sklearn import neighbors
 import models
+import utils
+
 import numpy as np
 import pandas as pd
 
@@ -9,7 +8,6 @@ import  matplotlib.pyplot as plt
 import database.database as db
 
 from dotenv import load_dotenv, find_dotenv
-from sklearn.neighbors import NearestNeighbors
 
 
 def create_csv():
@@ -61,7 +59,6 @@ def features_engineering(data):
     data = data.reset_index()
     data = data.drop(columns='index')
     # - - - - - - - - - - - -
-    
     # change column order [latitude, long, noise] -> necessary for the haversine formula
     data = data.reindex(columns=['latitude', 'longitude', 'noise'])
     
@@ -75,7 +72,7 @@ def features_engineering(data):
     # Plot scatter plot of samples 
     # long is x and lat is y
     plt.scatter(data['longitude'], data['latitude'])
-    plot('long (rad)', 'lat (rad)', "Samples", 'samples_scatter')
+    utils.plot('long (rad)', 'lat (rad)', "Samples", 'samples_scatter')
     
     # 3. create learner for neighbor searches -> add average noise and std in area ( radius -> 10 mt, 50 mt, 100mt)?
     kms_per_radian = 6371.000
@@ -83,39 +80,90 @@ def features_engineering(data):
 
     x_data = data[['latitude', 'longitude']]
 
-    # create learner neighbors
-    n_learner = NearestNeighbors(n_neighbors= 5, radius=radius, metric='haversine', algorithm="ball_tree")
-    n_learner.fit(x_data)
+    learner_5_nearest = models.create_neigbors_learners(x_data, 5)
+    learner_10_nearest = models.create_neigbors_learners(x_data, 10)
 
-    # -.-.-.-.-.-.-. an example and relatives plot -.-.-.-.-.-.-.
-    # example point
-    point_index = 10
-    point = x_data.iloc[point_index:point_index + 1, :] # i want it in the form of a dataframe (10th sample)
+    # two examples
+    # models.scatter_plot_kneigh(learner_1_nearest, x_data, 10)
+    # models.scatter_plot_kneigh(learner_10_nearest, x_data, 10)
+
+    # compute some adding features
+    nearest_5_points_noise_mean = []
+    nearest_5_points_noise_std = []
+    nearest_5_points_distance_mean = []
+    nearest_5_points_distance_std = []
+
+    nearest_10_points_noise_mean = []
+    nearest_10_points_noise_std = []
+    nearest_10_points_distance_mean = []
+    nearest_10_points_distance_std = []
+
+    print(x_data.shape)
+
+    for index in range(x_data.shape[0]): # for each row
+        coords = x_data.iloc[index:index + 1, :]
+        
+        # ------------------ five neighbors ---------------
+        distances, neighbors_indexes = learner_5_nearest.kneighbors(coords) # tuple (array of arrays, array of arrays)
+
+        # get first query results
+        distances = distances[0]
+        neighbors_indexes = neighbors_indexes[0]
+
+        nearest_5_points_distance_mean.append(np.mean(distances))
+        nearest_5_points_distance_std.append(np.std(distances))
+
+        noises = data.loc[neighbors_indexes]['noise']
+
+        nearest_5_points_noise_mean.append(np.mean(noises))
+        nearest_5_points_noise_std.append(np.std(noises))
+
+        # # get first query results
+        # distances = distances[0]
+        # neighbors_indexes = neighbors_indexes[0]
+
+        # i_nearest_sample = None # array
+        # index_nearest_sample = None # dataframe
+
+        # if index not in neighbors_indexes:
+        #     index_nearest_sample = 0
+        # else:
+        #     for i, neigh_index in enumerate(neighbors_indexes):
+        #         if index != neigh_index:
+        #             i_nearest_sample = i
+        #             index_nearest_sample = neigh_index
+        
+        # nearest_point_distance.append(distances[i_nearest_sample])
+        # nearest_point_noise.append(data.iloc[index_nearest_sample]['noise'])
+
+        # ------------------ ten neighbors ---------------
+        distances, neighbors_indexes = learner_10_nearest.kneighbors(coords) # tuple (array of arrays, array of arrays)
+
+        # get first query results
+        distances = distances[0]
+        neighbors_indexes = neighbors_indexes[0]
+
+        nearest_10_points_distance_mean.append(np.mean(distances))
+        nearest_10_points_distance_std.append(np.std(distances))
+
+        noises = data.loc[neighbors_indexes]['noise']
+
+        nearest_10_points_noise_mean.append(np.mean(noises))
+        nearest_10_points_noise_std.append(np.std(noises))
+
+    x_data['nearest_5_points_distance_mean'] =  nearest_5_points_distance_mean
+    x_data['nearest_5_points_distance_std'] =  nearest_5_points_distance_std
+
+    x_data['nearest_5_points_noise_mean'] = nearest_5_points_noise_mean
+    x_data['nearest_5_points_noise_std'] =  nearest_5_points_noise_std
     
-    # First array returned contains the distances to all points which are in the radius.
-    # Second array contains their indices.
-    distances, neighbors_indexes = n_learner.kneighbors(point) # tuple (array of arrays, array of arrays)
-    
-    colors = [0] * x_data.shape[0]
+    x_data['nearest_10_points_distance_mean'] =  nearest_10_points_distance_mean
+    x_data['nearest_10_points_distance_std'] =  nearest_10_points_distance_std
 
-    for index in neighbors_indexes[0]:
-        colors[index] = 1
-   
-    colors[point_index] = 2 # index of our point
-    
-    plt.scatter(data['longitude'], data['latitude'], c=colors)
-    plot('long (rad)', 'lat (rad)', "Neighbors of a sample", 'a_sample_neighbors')
+    x_data['nearest_10_points_noise_mean'] = nearest_10_points_noise_mean
+    x_data['nearest_10_points_noise_std'] =  nearest_10_points_noise_std
 
+    df_to_save = x_data.assign(noise=data['noise'])
+    df_to_save.to_csv('./data/noises_features')
 
-    # 2. CLUSTERING
-    #   a. DBSCAN is a good idea
-    #   b. SEARCH FOR THE ZONE where the point is
-    # reverse Geocoding
-
-def plot(x_label, y_label, title, file_name):
-    plt.xlabel(x_label)
-    plt.ylabel(y_label)
-    plt.title(title)
-    # plt.savefig("./plots/{}.png".format(file_name))
-    plt.show()
-    plt.clf()
+    return x_data, data['noise']
