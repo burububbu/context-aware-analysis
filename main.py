@@ -1,5 +1,6 @@
 import os
 
+import models
 import pandas as pd
 import dataset_handler as dh
 
@@ -21,7 +22,33 @@ def main():
 
     train_dataset = x_train.assign(noise=y_train)
     
-    dh.features_engineering(train_dataset)
+    # x_train, y_train = dh.features_engineering(train_dataset)
+    print(x_train)
+    
+    data = pd.read_csv("./data/noises_features.csv")
+    print(data.columns)
+
+    x_train = data[[
+    'latitude',
+    'longitude',
+
+    'nearest_5_points_distance_mean',
+    'nearest_5_points_distance_std',
+    'nearest_5_points_noise_mean',
+    'nearest_5_points_noise_std',
+    
+    'nearest_10_points_distance_mean',
+    'nearest_10_points_distance_std',
+    'nearest_10_points_noise_mean',
+    'nearest_10_points_noise_std'
+    ]]
+
+    y_train = data['noise']
+
+    models.train_knn(x_train, y_train)
+    # models.train_rf(x_train, y_train)
+    models.train_sgd(x_train, y_train)
+
     
     # subsets = dh.create_subsets(data)
 
