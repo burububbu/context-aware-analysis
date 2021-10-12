@@ -22,4 +22,3 @@ class Noise(Base):
     dummyUpdatesCount = Column(Integer)
     dummyUpdatesRadiusMin = Column(Float)
     dummyUpdatesRadiusMax = Column(Float)
-  

@@ -33,10 +33,8 @@ def getAll():
         Noise.id.label('id'),
         Noise.timestamp.label('timestamp'),
         # ST_AsText(Noise.location.label('location')),
-        func.st_x(Noise.location).label('longitude'), # longitude
-        func.st_y(Noise.location).label('latitude'),  # latitude
-        Noise.noise.label('noise'))
-
-    print(noises)
+        func.st_x(Noise.location).label('longitude'),
+        func.st_y(Noise.location).label('latitude'),
+        Noise.noise.label('noise')).filter(Noise.dummyLocation == False, Noise.gpsPerturbated == False)
 
     return noises
