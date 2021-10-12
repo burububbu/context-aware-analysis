@@ -1,5 +1,4 @@
 import models
-
 import numpy as np
 
 class Features_handler():
@@ -20,11 +19,11 @@ class Features_handler():
             learner_name = 'nearest_{}'.format(num_neighbors)
             self.neighbors_learners[learner_name] =  models.create_neigbors_learners(x_train_data, num_neighbors)
 
-    def get_neighbors_features(self, x_train, y_train):
+    def get_neighbors_features(self, x_data, y_data):
         features_values = {}
 
         for name_learner, learner in self.neighbors_learners.items(): 
-            all_distances, all_neighbors_indexes = learner.kneighbors(x_train)
+            all_distances, all_neighbors_indexes = learner.kneighbors(x_data)
             
             distance_mean = []
             distance_std = []
@@ -36,7 +35,7 @@ class Features_handler():
                 distance_std.append(np.std(distances))
                 
             for neighbors_indexes in all_neighbors_indexes:
-                noises = y_train.iloc[neighbors_indexes]
+                noises = y_data.iloc[neighbors_indexes]
 
                 noise_mean.append(np.mean(noises))
                 noise_std.append(np.std(noises))
