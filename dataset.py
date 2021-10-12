@@ -19,6 +19,9 @@ class Dataset:
         self.data['noise'],
         test_size=test_size,
         random_state=random_state)
+    
+    def add_column_to_train(self, name, values):
+        self.x_train[name] = values
 
     def train_to_csv(self, path):
         to_save = self.x_train.join(self.y_train)
