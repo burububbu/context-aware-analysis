@@ -1,56 +1,52 @@
 import os
+from features_extraction import Features_handler
 
 import models
 import pandas as pd
 import dataset_handler as dh
 
-from sklearn.model_selection import train_test_split
+from dataset import Dataset
 
-def main():
-    csv_data =  "./data/noises.csv"
+csv_data =  "./data/noises.csv"
+csv_data_new_features = "./data/noises_features.csv"
+
+def main():    
+    if not os.path.exists(csv_data_new_features):
     
-    if not os.path.exists(csv_data):
-        dh.create_csv()
+        if not os.path.exists(csv_data):
+            dh.create_csv()
+
+        create_csv_features()
+
+def create_csv_features():
+    dataset = Dataset(csv_data)
+    dataset.split(0.20, 42)
+
+    featurehandler = Features_handler()   
+   
+    # convert to radiants -> for haversine
+    dataset.x_train = featurehandler.to_radiants(dataset.x_train)
+    dataset.y_train = featurehandler.round_lvalues(dataset.y_train)
+
+    featurehandler.init_learners(dataset.x_train, [5, 10])
     
-    data = pd.read_csv(csv_data)
+    new_neighbors_features = featurehandler.get_neighbors_features(
+        dataset.x_train,
+        dataset.y_train)
 
-    x_train, x_test, y_train, y_test = train_test_split(
-        data[['longitude', 'latitude']],
-        data['noise'],
-        test_size=0.20,
-        random_state=42)
-
-    train_dataset = x_train.assign(noise=y_train)
+    for feature_name, values in new_neighbors_features.items():
+        dataset.x_train[feature_name] = values
     
-    # x_train, y_train = dh.features_engineering(train_dataset)
-    print(x_train)
-    
-    data = pd.read_csv("./data/noises_features.csv")
-    print(data.columns)
+    dataset.train_to_csv(csv_data_new_features)
 
-    x_train = data[[
-    'latitude',
-    'longitude',
+    # y_train = data['noise']
 
-    'nearest_5_points_distance_mean',
-    'nearest_5_points_distance_std',
-    'nearest_5_points_noise_mean',
-    'nearest_5_points_noise_std',
-    
-    'nearest_10_points_distance_mean',
-    'nearest_10_points_distance_std',
-    'nearest_10_points_noise_mean',
-    'nearest_10_points_noise_std'
-    ]]
-
-    y_train = data['noise']
-
-    models.train_knn(x_train, y_train)
-    # models.train_rf(x_train, y_train)
-    models.train_sgd(x_train, y_train)
+    # models.train_knn(x_train, y_train)
+    # # models.train_rf(x_train, y_train)
+    # models.train_sgd(x_train, y_train)
 
     
-    # subsets = dh.create_subsets(data)
+    # # subsets = dh.create_subsets(data)
 
 if __name__ == '__main__':
     main()
