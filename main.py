@@ -1,19 +1,17 @@
 import os
 import utils
 
-from dataset import Dataset
-from features_extraction import Features_handler
-
 csv_data =  "./data/noises.csv"
-csv_data_new_features = "./data/noises_features.csv"
+csv_train_data = "./data/train_data.csv"
+csv_test_data = "./data/test_data.csv"
 
-def main():    
-    if not os.path.exists(csv_data_new_features):
+def main():
+    if not os.path.exists(csv_train_data):
         
         if not os.path.exists(csv_data):
-            utils.create_csv()
+            utils.create_csv(csv_data)
 
-        utils.create_csv_features(csv_data, csv_data_new_features)
+        utils.create_csv_features(csv_data, csv_train_data, csv_test_data)
 
 
 
