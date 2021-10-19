@@ -1,19 +1,10 @@
 import ml_models.models as  models
 import numpy as np
-
-class Features_handler():
-    neighbors_learners = {}
-
-    def to_radiants(self, data):
-        
-        data['latitude'] = data['latitude'].map(np.radians) 
-        data['longitude'] = data['longitude'].map(np.radians)
-        
-        return data
+class Learners():
     
-    def round_values(self, data):
-        return data.apply(lambda value: round(value,5))
-       
+    def __init__(self):
+        self.neighbors_learners = {}
+
     def init_learners(self, x_train_data, neighbors= []):
         for num_neighbors  in neighbors:
             learner_name = 'nearest_{}'.format(num_neighbors)
