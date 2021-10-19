@@ -1,40 +1,40 @@
 import os
+from dataset import Dataset
+from models_handler import ModelsHandler
 import utils
+
+from ml_models import models
 
 csv_data =  "./data/noises.csv"
 csv_train_data = "./data/train_data.csv"
 csv_test_data = "./data/test_data.csv"
 
+knn_params = {
+    'n_neighbors':[5, 10, 20, 30, 50, 60, 100, 150],
+    'weights': ['uniform', 'distance'],
+}
+
+rf_params = {
+    'n_estimators': [100, 200, 300, 500]
+}
+
+
 def main():
+    dataset = Dataset()
+
     if not os.path.exists(csv_train_data):
-        
         if not os.path.exists(csv_data):
             utils.create_csv(csv_data)
+        dataset = utils.create_csv_features(csv_data, csv_train_data, csv_test_data)
+    else:
+        dataset.load_train_test_data(csv_train_data, csv_test_data)
 
-        utils.create_csv_features(csv_data, csv_train_data, csv_test_data)
+    models = ModelsHandler(dataset)
 
+    # models.create_knn(knn_params)
+    models.create_rf(rf_params)
+    # models.create_sgd({})
 
-
-# def create_csv_features( ):
-#     dataset = Dataset(csv_data)
-#     dataset.split(0.20, 42)
-
-#     featurehandler = Features_handler()   
-   
-#     # convert to radiants -> for haversine
-#     dataset.x_train = featurehandler.to_radiants(dataset.x_train)
-#     dataset.y_train = featurehandler.round_lvalues(dataset.y_train)
-
-#     featurehandler.init_learners(dataset.x_train, [5, 10])
-    
-#     new_neighbors_features = featurehandler.get_neighbors_features(
-#         dataset.x_train,
-#         dataset.y_train)
-
-#     for feature_name, values in new_neighbors_features.items():
-#         dataset.x_train[feature_name] = values
-    
-#     dataset.train_to_csv(csv_data_new_features)
 
 
 if __name__ == '__main__':
