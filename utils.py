@@ -49,22 +49,6 @@ def generate_features(csv_data, csv_train_data, csv_test_data, to_csv = True):
     
     return dataset
 
-
-
-def TEST(dataset, features_handler, type): # type = train, test
-    # convert altitude and longitude to radiants -> for haversine
-    dataset.x_train = _to_radiants(dataset.x_train)
-    dataset.y_train = _round_values(dataset.y_train)
-
-    features_handler.init_learners(dataset.x_train[['latitude', 'longitude']], [5, 10])
-    
-    new_neighbors_features = features_handler.get_neighbors_features(
-        dataset.x_train[['latitude', 'longitude']],
-        dataset.y_train)
-
-    for feature_name, values in new_neighbors_features.items():
-        dataset.add_column_to_train(feature_name, values)
-
 def _add_train_features(dataset, features_handler):
     # convert altitude and longitude to radiants -> for haversine
     dataset.x_train = _to_radiants(dataset.x_train)

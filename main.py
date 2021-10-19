@@ -24,8 +24,8 @@ def main():
 
     if not os.path.exists(csv_train_data):
         if not os.path.exists(csv_data):
-            utils.create_csv(csv_data)
-        dataset = utils.create_csv_features(csv_data, csv_train_data, csv_test_data)
+            utils.create_data_csv(csv_data)
+        dataset = utils.generate_features(csv_data, csv_train_data, csv_test_data)
     else:
         dataset.load_train_test_data(csv_train_data, csv_test_data)
 
