@@ -3,8 +3,8 @@ import numpy as np
 import  matplotlib.pyplot as plt
 import database.database as db
 
-from dataset import Dataset
-from learners import Learners
+from classes.dataset import Dataset
+from classes.learners import Learners
 
 from dotenv import load_dotenv, find_dotenv
 

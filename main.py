@@ -1,9 +1,8 @@
 import os
-from dataset import Dataset
-from models_handler import ModelsHandler
 import utils
 
-from ml_models import models
+from classes.dataset import Dataset
+from classes.models_handler import ModelsHandler
 
 csv_data =  "./data/noises.csv"
 csv_train_data = "./data/train_data.csv"
