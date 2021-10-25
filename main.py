@@ -14,7 +14,7 @@ knn_params = {
 }
 
 rf_params = {
-    'n_estimators': [100, 200, 300, 500]
+    'n_estimators': [200, 300, 500]
 }
 
 
@@ -28,11 +28,13 @@ def main():
     else:
         dataset.load_train_test_data(csv_train_data, csv_test_data)
 
-    models = ModelsHandler(dataset)
+    dataset.select_best_features(5)
 
-    # models.create_knn(knn_params)
+    models = ModelsHandler(dataset)
+    
+    models.create_knn(knn_params)
     models.create_rf(rf_params)
-    # models.create_sgd({})
+    models.create_sgd({})
 
 
 
