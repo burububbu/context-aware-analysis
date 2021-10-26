@@ -17,6 +17,13 @@ rf_params = {
     'n_estimators': [200, 300, 500]
 }
 
+nn_params = {
+    "hidden_sizes": [5, 10, 64],
+    "num_epochs": [50],
+    "batch_sizes": [128],
+    "learning_rates": [0.1]
+}
+
 
 def main():
     dataset = Dataset()
@@ -32,9 +39,10 @@ def main():
 
     models = ModelsHandler(dataset)
     
-    models.create_knn(knn_params)
-    models.create_rf(rf_params)
-    models.create_sgd({})
+    models.create_nn(nn_params)
+    # models.create_knn(knn_params)
+    # models.create_rf(rf_params)
+    # models.create_sgd({})
 
 
 

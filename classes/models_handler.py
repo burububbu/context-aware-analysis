@@ -1,28 +1,25 @@
-# handle of training models
-import utils
-
-import  matplotlib.pyplot as plt
-
 from sklearn.model_selection import GridSearchCV
-from sklearn.neighbors import NearestNeighbors
 from sklearn.neighbors import KNeighborsRegressor
-from sklearn.cluster import DBSCAN, AgglomerativeClustering
-from sklearn.svm import SVR
-from sklearn.ensemble import GradientBoostingRegressor
-
 from sklearn.linear_model import SGDRegressor
-
 from sklearn.ensemble import RandomForestRegressor
-
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
+
+from classes.nn_classes import DatasetNN
+
+import nn_utils as nn_utils
 
 class ModelsHandler():
 
     def __init__(self, dataset):
+        ''' Init instance properties'''
         self.models = {}
         self.subset_models = {}
 
         self.dataset = dataset
+
+        # dataset for neural network
+        self.train_dataset_nn = DatasetNN(dataset.x_train.to_numpy(), dataset.y_train)
+        self.test_dataset_nn = DatasetNN(dataset.x_test.to_numpy(), dataset.y_test)
 
         # init scalers (shared among instances)
         self.standard_scaler = StandardScaler()
@@ -40,9 +37,9 @@ class ModelsHandler():
     def create_knn(self, params):
         print('KNN regressor...')
         print('Complete set ...')
-        set_results = self._test_models(KNeighborsRegressor(), self.dataset.x_train, params)
+        set_results = self._create_models(KNeighborsRegressor(), self.dataset.x_train, params)
         print('Subset...')
-        subset_results = self._test_models(KNeighborsRegressor(), self.dataset.x_train_subset, params)
+        subset_results = self._create_models(KNeighborsRegressor(), self.dataset.x_train_subset, params)
 
         self.models['knn'] =  max(set_results, key= lambda item: item[1])[2]
         self.subset_models['knn'] = max(subset_results, key= lambda item: item[1])[2]
@@ -50,14 +47,13 @@ class ModelsHandler():
     def create_sgd(self, params):
         print('SGD regressor...')
         print('Complete set ...')
-        set_results = self._test_models(SGDRegressor(), self.dataset.x_train, params)
+        set_results = self._create_models(SGDRegressor(), self.dataset.x_train, params)
         print('Subset...')
-        subset_results = self._test_models(SGDRegressor(), self.dataset.x_train_subset, params)
+        subset_results = self._create_models(SGDRegressor(), self.dataset.x_train_subset, params)
         
         self.models['sgd'] =  max(set_results, key= lambda item: item[1])[2]
         self.subset_models['sgd'] = max(subset_results, key= lambda item: item[1])[2]
-
-    
+   
     def create_rf(self, params):
         print('Random forest regressor...')
         print('Complete set...')
@@ -68,9 +64,14 @@ class ModelsHandler():
         set_results = self._train_model(RandomForestRegressor(), self.dataset.x_train_subset, params)
         print('\t{0} score with params {1} and no scaling'.format(set_results[-1][1], set_results[-1][0]))
 
+    def create_nn(self, params):
+        
+        nn_utils.create_nn_models(self.train_dataset_nn, self.test_dataset_nn, params)
 
 
-    def _test_models(self, model, x_data, params):
+    def _create_models(self, model, x_data, params):
+        results = []
+
         standard_data = None
         minmax_data = None
 
@@ -82,8 +83,6 @@ class ModelsHandler():
             standard_data = self.standard_scaler_subset.transform(x_data)
             minmax_data = self.minmax_scaler_subset.transform(x_data)
          
-        results = []
-
         # test without scaling
         results.append(self._train_model(model, x_data.values, params))
         print('\t{0} score with params {1} and no scaling'.format(results[-1][1], results[-1][0]))
@@ -105,7 +104,4 @@ class ModelsHandler():
         reg.fit(x_train_data, self.dataset.y_train)
         
         return reg.best_params_, reg.best_score_, reg.best_estimator_
-
-
-        
 
