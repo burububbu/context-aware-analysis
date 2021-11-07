@@ -6,6 +6,8 @@ import database.database as db
 from classes.dataset import Dataset
 from classes.learners import Learners
 
+from sklearn.neighbors import NearestNeighbors
+
 from dotenv import load_dotenv, find_dotenv
 
 def create_data_csv(csv_data):
@@ -91,3 +93,10 @@ def plot(x_label, y_label, title, file_name):
     plt.savefig("./plots/{}.png".format(file_name))
 
     plt.clf()
+
+def create_neigbors_learners(data, n_neigh):
+    # create two learners neighbors
+    learner = NearestNeighbors(n_neighbors= n_neigh +1, metric='haversine', algorithm="ball_tree")
+    learner.fit(data)
+
+    return learner 
