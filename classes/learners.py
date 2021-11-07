@@ -1,4 +1,5 @@
-import ml_models.models as  models
+import utils
+
 import numpy as np
 
 class Learners():
@@ -9,7 +10,7 @@ class Learners():
     def init_learners(self, x_train_data, neighbors= []):
         for num_neighbors  in neighbors:
             learner_name = 'nearest_{}'.format(num_neighbors)
-            self.neighbors_learners[learner_name] =  models.create_neigbors_learners(x_train_data, num_neighbors)
+            self.neighbors_learners[learner_name] = utils.create_neigbors_learners(x_train_data, num_neighbors)
 
     def get_neighbors_features(self, x_data, y_data):
         features_values = {}
