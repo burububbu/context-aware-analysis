@@ -19,9 +19,9 @@ rf_params = {
 
 nn_params = {
     "hidden_sizes": [5, 10, 64],
-    "num_epochs": [50],
-    "batch_sizes": [128],
-    "learning_rates": [0.1]
+    "num_epochs": [50, 100, 500],
+    "batch_sizes": [64, 128],
+    "learning_rates": [0.1, 0.001]
 }
 
 

@@ -14,8 +14,16 @@ class Dataset:
         self.x_test = None
         self.t_test = None
 
-        # features subset indeces
+        # features subset indices
         self.feat_subset_indices = None
+    
+    @property
+    def x_train_base(self):
+        return self.x_train[['latitude', 'longitude']]
+    
+    @property
+    def y_test_base(self):
+        return self.x_test[['latitude', 'longitude']]
 
     @property
     def x_train_subset(self):
@@ -24,6 +32,7 @@ class Dataset:
     @property
     def y_test_subset(self):
         return self.x_test.iloc[:, self.feat_subset_indices]
+
 
     def load_data(self, csv_path):
         ''' Load general data from csv'''
@@ -65,6 +74,5 @@ class Dataset:
         ''' from train data '''
         features_selector = SelectKBest(f_regression, k = k_value).fit(self.x_train, self.y_train)
         self.feat_subset_indices = features_selector.get_support(indices=True)
-        print("selected features {}".format(self.x_train.columns[self.feat_subset_indices].values))
 
 

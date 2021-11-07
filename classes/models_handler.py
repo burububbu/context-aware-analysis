@@ -17,9 +17,9 @@ class ModelsHandler():
 
         self.dataset = dataset
 
-        # dataset for neural network
-        self.train_dataset_nn = DatasetNN(dataset.x_train.to_numpy(), dataset.y_train)
-        self.test_dataset_nn = DatasetNN(dataset.x_test.to_numpy(), dataset.y_test)
+        # # dataset for neural network
+        # self.train_dataset_nn = DatasetNN(dataset.x_train.to_numpy(), dataset.y_train)
+        # self.test_dataset_nn = DatasetNN(dataset.x_test.to_numpy(), dataset.y_test)
 
         # init scalers (shared among instances)
         self.standard_scaler = StandardScaler()
@@ -65,8 +65,26 @@ class ModelsHandler():
         print('\t{0} score with params {1} and no scaling'.format(set_results[-1][1], set_results[-1][0]))
 
     def create_nn(self, params):
+
+        # entire set
+        print('ENTIRE DATASET...')
+        standardized_x_train = self.standard_scaler.transform(self.dataset.x_train)
+        standardized_x_test = self.standard_scaler.transform(self.dataset.x_test)
+
+        train_data_nn = DatasetNN(standardized_x_train, self.dataset.y_train)
+        test_data_nn =DatasetNN(standardized_x_test, self.dataset.y_test)
         
-        nn_utils.create_nn_models(self.train_dataset_nn, self.test_dataset_nn, params)
+        nn_utils.create_nn_models(train_data_nn, test_data_nn, params)
+
+        # subset
+        print('ENTIRE SUB DATASET...')
+        standardized_x_sub_train = self.standard_scaler_subset.transform(self.dataset.x_train_subset)
+        standardized_x_sub_test = self.standard_scaler_subset.transform(self.dataset.x_test_subset)
+
+        train_data_nn = DatasetNN(standardized_x_sub_train.to_numpy(), self.dataset.y_train)
+        test_data_nn =DatasetNN(standardized_x_sub_test.to_numpy(), self.dataset.y_test)
+        
+        nn_utils.create_nn_models(train_data_nn, test_data_nn, params)
 
 
     def _create_models(self, model, x_data, params):
@@ -76,7 +94,6 @@ class ModelsHandler():
         minmax_data = None
 
         if len(x_data.columns) == len(self.dataset.x_train.columns):
-            print(len(x_data.columns), len(self.dataset.x_train.columns))
             standard_data = self.standard_scaler.transform(x_data)
             minmax_data = self.minmax_scaler.transform(x_data)
         else:

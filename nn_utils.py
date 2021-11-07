@@ -1,12 +1,11 @@
 from classes.nn_classes import NeuralNet
+from sklearn.metrics import r2_score
 from torch.utils.data import DataLoader
 
 import torch.nn as nn
 import torch
 
 import itertools
-
-# TODO SEARCH for MSE and R2
        
 def create_nn_models(train_dataset, test_dataset, params):
     torch.manual_seed(42)
@@ -34,16 +33,20 @@ def create_nn_models(train_dataset, test_dataset, params):
 
         for epoch in range(num_epoch):
             #train
-            mean_train_loss, score = _train(train_dataloader, model, loss, optimizer, device)
+            mean_train_loss, r2_score = _train(train_dataloader, model, loss, optimizer, device)
             
-            if (epoch+1) % 10 == 0:
-                print(f'\t\t Epoch {epoch + 1}/{num_epoch}')
-                print(f'\t\t\tMedium train loss (mse): {mean_train_loss}')
-                print(f'\t\t\tTrain score (r2): {mean_train_loss}') 
-                
+            # if (epoch+1) % 10 == 0:
+            #     print(f'\t\t Epoch {epoch + 1}/{num_epoch}')
+            #     print(f'\t\t\tMedium train loss (mse): {mean_train_loss}')
+            #     print(f'\t\t\tTrain score (r2): {mean_train_loss}') 
+            
+            if (epoch+1) % num_epoch == 0:
+                print(f'\t\tMedium train loss (mse): {mean_train_loss}')
+
         # test    
-        mean_test_loss, score =_test(test_dataloader, model, loss, device)
+        mean_test_loss, r2_score =_test(test_dataloader, model, loss, device)
         print(f'\t\tMedium test loss: {mean_test_loss}')
+        print(f'\t\tMedium R2 score: {r2_score}')
 
 
 def _train(dataloader, model, loss_fn, optimizer, device):
@@ -83,4 +86,12 @@ def _test(dataloader, model, loss_fn, device):
             loss =loss_fn(prediction.flatten(), targets)
             total_loss += loss.item()
     
-    return total_loss/num_batches, None
+    x_data = dataloader.dataset.X.to(device)
+    
+    preds = model(x_data)
+    preds = preds.detach().cpu().numpy()
+    
+    y_data = dataloader.dataset.y.detach().cpu().numpy()
+    r2 = r2_score(y_data, preds)
+
+    return total_loss/num_batches, r2
