@@ -6,7 +6,7 @@ from sklearn.preprocessing import StandardScaler, MinMaxScaler
 
 from classes.nn_classes import DatasetNN
 
-import nn_utils as nn_utils
+import nn_utils as nn_utils 
 
 class ModelsHandler():
 
@@ -22,47 +22,58 @@ class ModelsHandler():
         # self.test_dataset_nn = DatasetNN(dataset.x_test.to_numpy(), dataset.y_test)
 
         # init scalers (shared among instances)
-        self.standard_scaler = StandardScaler()
-        self.standard_scaler.fit(dataset.x_train)
+        self.standard_scalers = [
+            StandardScaler().fit(dataset.x_train_base),
+            StandardScaler().fit(dataset.x_train),
+            StandardScaler().fit(dataset.x_train_subset)
+            ]
 
-        self.minmax_scaler = MinMaxScaler()
-        self.minmax_scaler.fit(dataset.x_train)
-
-        self.standard_scaler_subset = StandardScaler()
-        self.standard_scaler_subset.fit(dataset.x_train_subset)
-
-        self.minmax_scaler_subset = MinMaxScaler()
-        self.minmax_scaler_subset.fit(dataset.x_train_subset)
+        self.minmax_scalers = [
+            MinMaxScaler().fit(dataset.x_train_base),
+            MinMaxScaler().fit(dataset.x_train),
+            MinMaxScaler().fit(dataset.x_train_subset),
+            ]
 
     def create_knn(self, params):
         print('KNN regressor...')
+        
+        print('Base set ...')
+        set_results = self._create_models(KNeighborsRegressor(), self.dataset.x_train_base, params, 0)
         print('Complete set ...')
-        set_results = self._create_models(KNeighborsRegressor(), self.dataset.x_train, params)
-        print('Subset...')
-        subset_results = self._create_models(KNeighborsRegressor(), self.dataset.x_train_subset, params)
+        set_results = self._create_models(KNeighborsRegressor(), self.dataset.x_train, params, 1)
+        print('Subset ...')
+        subset_results = self._create_models(KNeighborsRegressor(), self.dataset.x_train_subset, params, 2)
 
-        self.models['knn'] =  max(set_results, key= lambda item: item[1])[2]
-        self.subset_models['knn'] = max(subset_results, key= lambda item: item[1])[2]
+        self.models['knn'] =  max(set_results, key=lambda item: item[1])[2]
+        self.subset_models['knn'] = max(subset_results, key=lambda item: item[1])[2]
 
     def create_sgd(self, params):
         print('SGD regressor...')
+
+        print('Base set ...')
+        set_results = self._create_models(SGDRegressor(), self.dataset.x_train_base, params, 0)
         print('Complete set ...')
-        set_results = self._create_models(SGDRegressor(), self.dataset.x_train, params)
+        set_results = self._create_models(SGDRegressor(), self.dataset.x_train, params, 1)
         print('Subset...')
-        subset_results = self._create_models(SGDRegressor(), self.dataset.x_train_subset, params)
+        subset_results = self._create_models(SGDRegressor(), self.dataset.x_train_subset, params, 2)
         
         self.models['sgd'] =  max(set_results, key= lambda item: item[1])[2]
         self.subset_models['sgd'] = max(subset_results, key= lambda item: item[1])[2]
    
     def create_rf(self, params):
         print('Random forest regressor...')
+
+        print('Base set ...')
+        set_result = self._train_model(RandomForestRegressor(), self.dataset.x_train_base, params)
+        print('\t{0} score with params {1} and no scaling'.format(set_result[1], set_result[0]))
+
         print('Complete set...')
-        set_results = self._train_model(RandomForestRegressor(), self.dataset.x_train, params)
-        print('\t{0} score with params {1} and no scaling'.format(set_results[-1][1], set_results[-1][0]))
+        set_result = self._train_model(RandomForestRegressor(), self.dataset.x_train, params)
+        print('\t{0} score with params {1} and no scaling'.format(set_result[1], set_result[0]))
         
         print('Subset...')
-        set_results = self._train_model(RandomForestRegressor(), self.dataset.x_train_subset, params)
-        print('\t{0} score with params {1} and no scaling'.format(set_results[-1][1], set_results[-1][0]))
+        set_result = self._train_model(RandomForestRegressor(), self.dataset.x_train_subset, params)
+        print('\t{0} score with params {1} and no scaling'.format(set_result[1], set_result[0]))
 
     def create_nn(self, params):
 
@@ -87,18 +98,11 @@ class ModelsHandler():
         nn_utils.create_nn_models(train_data_nn, test_data_nn, params)
 
 
-    def _create_models(self, model, x_data, params):
+    def _create_models(self, model, x_data, params, scaler_index):
         results = []
 
-        standard_data = None
-        minmax_data = None
-
-        if len(x_data.columns) == len(self.dataset.x_train.columns):
-            standard_data = self.standard_scaler.transform(x_data)
-            minmax_data = self.minmax_scaler.transform(x_data)
-        else:
-            standard_data = self.standard_scaler_subset.transform(x_data)
-            minmax_data = self.minmax_scaler_subset.transform(x_data)
+        standard_data = self.standard_scalers[scaler_index].transform(x_data)
+        minmax_data = self.minmax_scalers[scaler_index].transform(x_data)
          
         # test without scaling
         results.append(self._train_model(model, x_data.values, params))
