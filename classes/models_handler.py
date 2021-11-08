@@ -11,15 +11,12 @@ import nn_utils as nn_utils
 class ModelsHandler():
 
     def __init__(self, dataset):
+
         ''' Init instance properties'''
         self.models = {}
         self.subset_models = {}
 
         self.dataset = dataset
-
-        # # dataset for neural network
-        # self.train_dataset_nn = DatasetNN(dataset.x_train.to_numpy(), dataset.y_train)
-        # self.test_dataset_nn = DatasetNN(dataset.x_test.to_numpy(), dataset.y_test)
 
         # init scalers (shared among instances)
         self.standard_scalers = [
@@ -34,95 +31,76 @@ class ModelsHandler():
             MinMaxScaler().fit(dataset.x_train_subset),
             ]
 
-    def create_knn(self, params):
-        print('KNN regressor...')
+        self.models = {
+            'knn': KNeighborsRegressor,
+            'sgd': SGDRegressor,
+            'rf': RandomForestRegressor
+        }
+    
+    def create_models(self, model_name, params):
         
-        print('Base set ...')
-        set_results = self._create_models(KNeighborsRegressor(), self.dataset.x_train_base, params, 0)
-        print('Complete set ...')
-        set_results = self._create_models(KNeighborsRegressor(), self.dataset.x_train, params, 1)
-        print('Subset ...')
-        subset_results = self._create_models(KNeighborsRegressor(), self.dataset.x_train_subset, params, 2)
+        if self.models[model_name] != None:         
+            print(f'{model_name} regressor...')
+            
+            print('\tBase set ...')
+            self._train_models(self.models[model_name](), self.dataset.x_train_base, params, 0)
 
-        self.models['knn'] =  max(set_results, key=lambda item: item[1])[2]
-        self.subset_models['knn'] = max(subset_results, key=lambda item: item[1])[2]
+            print('\tComplete set ...')
+            self._train_models(self.models[model_name](), self.dataset.x_train, params, 1)
+            
+            print('\tSubset ...')
+            self._train_models(self.models[model_name](), self.dataset.x_train_subset, params, 2)
+        else:
+            print(f'ERROR: {model_name} doesn''t exist')
 
-    def create_sgd(self, params):
-        print('SGD regressor...')
-
-        print('Base set ...')
-        set_results = self._create_models(SGDRegressor(), self.dataset.x_train_base, params, 0)
-        print('Complete set ...')
-        set_results = self._create_models(SGDRegressor(), self.dataset.x_train, params, 1)
-        print('Subset...')
-        subset_results = self._create_models(SGDRegressor(), self.dataset.x_train_subset, params, 2)
+    def create_neural_networks(self, params):
+        print('Neural network ...')
+    
+        print('\tBase set...')
+        self._train_neural_networks(self.dataset.x_train_base, self.dataset.x_test_base, params, 0)
         
-        self.models['sgd'] =  max(set_results, key= lambda item: item[1])[2]
-        self.subset_models['sgd'] = max(subset_results, key= lambda item: item[1])[2]
-   
-    def create_rf(self, params):
-        print('Random forest regressor...')
-
-        print('Base set ...')
-        set_result = self._train_model(RandomForestRegressor(), self.dataset.x_train_base, params)
-        print('\t{0} score with params {1} and no scaling'.format(set_result[1], set_result[0]))
-
-        print('Complete set...')
-        set_result = self._train_model(RandomForestRegressor(), self.dataset.x_train, params)
-        print('\t{0} score with params {1} and no scaling'.format(set_result[1], set_result[0]))
+        print('\tComplete set...')
+        self._train_neural_networks(self.dataset.x_train, self.dataset.x_test, params, 1)
         
-        print('Subset...')
-        set_result = self._train_model(RandomForestRegressor(), self.dataset.x_train_subset, params)
-        print('\t{0} score with params {1} and no scaling'.format(set_result[1], set_result[0]))
+        print('\tSubset...')
+        self._train_neural_networks(self.dataset.x_train_subset, self.dataset.x_test_subset, params, 2)
 
-    def create_nn(self, params):
-
-        # entire set
-        print('ENTIRE DATASET...')
-        standardized_x_train = self.standard_scaler.transform(self.dataset.x_train)
-        standardized_x_test = self.standard_scaler.transform(self.dataset.x_test)
-
-        train_data_nn = DatasetNN(standardized_x_train, self.dataset.y_train)
-        test_data_nn =DatasetNN(standardized_x_test, self.dataset.y_test)
-        
-        nn_utils.create_nn_models(train_data_nn, test_data_nn, params)
-
-        # subset
-        print('ENTIRE SUB DATASET...')
-        standardized_x_sub_train = self.standard_scaler_subset.transform(self.dataset.x_train_subset)
-        standardized_x_sub_test = self.standard_scaler_subset.transform(self.dataset.x_test_subset)
-
-        train_data_nn = DatasetNN(standardized_x_sub_train.to_numpy(), self.dataset.y_train)
-        test_data_nn =DatasetNN(standardized_x_sub_test.to_numpy(), self.dataset.y_test)
-        
-        nn_utils.create_nn_models(train_data_nn, test_data_nn, params)
-
-
-    def _create_models(self, model, x_data, params, scaler_index):
+    def _train_models(self, model, x_data, params, scaler_index):
         results = []
 
         standard_data = self.standard_scalers[scaler_index].transform(x_data)
         minmax_data = self.minmax_scalers[scaler_index].transform(x_data)
          
         # test without scaling
-        results.append(self._train_model(model, x_data.values, params))
-        print('\t{0} score with params {1} and no scaling'.format(results[-1][1], results[-1][0]))
+        results.append(self._cross_validating_model(model, x_data.values, params))
+        print('\t\t{0} score with params {1} and no scaling'.format(results[-1][1], results[-1][0]))
         
         # test with standard scaler
-        results.append(self._train_model(model, standard_data, params))
-        print('\t{0} score with params {1} and standard scaler scaling'.format(results[-1][1], results[-1][0]))
+        results.append(self._cross_validating_model(model, standard_data, params))
+        print('\t\t{0} score with params {1} and standard scaler scaling'.format(results[-1][1], results[-1][0]))
 
         # test with min max scaler
-        results.append(self._train_model(model, minmax_data, params))
-        print('\t{0} score with params {1} and minmax scaler scaling'.format(results[-1][1], results[-1][0]))
+        results.append(self._cross_validating_model(model, minmax_data, params))
+        print('\t\t{0} score with params {1} and minmax scaler scaling'.format(results[-1][1], results[-1][0]))
 
         return results
 
-    def _train_model(self, model, x_train_data, params):
+    def _cross_validating_model(self, model, x_train_data, params):
         ''' Returns the best model '''
 
         reg = GridSearchCV(estimator = model, param_grid=params)
         reg.fit(x_train_data, self.dataset.y_train)
         
         return reg.best_params_, reg.best_score_, reg.best_estimator_
+         
+    def _train_neural_networks(self, x_data, x_test, params, index):
+
+        standardized_x_train = self.standard_scalers[index].transform(x_data)
+        standardized_x_test = self.standard_scalers[index].transform(x_test)
+
+        train_data_nn = DatasetNN(standardized_x_train, self.dataset.y_train)
+        test_data_nn =DatasetNN(standardized_x_test, self.dataset.y_test)
+        
+        nn_utils.train_neural_networks(train_data_nn, test_data_nn, params)
+
 

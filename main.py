@@ -24,6 +24,14 @@ nn_params = {
     "learning_rates": [0.1, 0.001]
 }
 
+# nn_params = {
+#     "hidden_sizes": [5, 10, 64],
+#     "num_epochs": [5],
+#     "batch_sizes": [64],
+#     "learning_rates": [0.1]
+# }
+
+
 
 def main():
     dataset = Dataset()
@@ -37,12 +45,12 @@ def main():
 
     dataset.select_best_features(5)
 
-    models = ModelsHandler(dataset)
+    models_handler = ModelsHandler(dataset)
     
-    models.create_nn(nn_params)
-    # models.create_knn(knn_params)
-    # models.create_rf(rf_params)
-    # models.create_sgd({})
+    models_handler.create_models('knn', knn_params)
+    models_handler.create_models('rf', rf_params)
+    models_handler.create_models('sgd', {})
+    models_handler.create_neural_networks(nn_params)
 
 
 
