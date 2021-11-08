@@ -22,7 +22,7 @@ class Dataset:
         return self.x_train[['latitude', 'longitude']]
     
     @property
-    def y_test_base(self):
+    def x_test_base(self):
         return self.x_test[['latitude', 'longitude']]
 
     @property
@@ -30,7 +30,7 @@ class Dataset:
         return self.x_train.iloc[:, self.feat_subset_indices]
     
     @property
-    def y_test_subset(self):
+    def x_test_subset(self):
         return self.x_test.iloc[:, self.feat_subset_indices]
 
 
