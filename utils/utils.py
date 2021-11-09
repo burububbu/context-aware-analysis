@@ -85,15 +85,6 @@ def _to_radiants(data):
     data['longitude'] = data['longitude'].map(np.radians)
     return data
 
-
-def plot(x_label, y_label, title, file_name):
-    plt.xlabel(x_label)
-    plt.ylabel(y_label)
-    plt.title(title)
-    plt.savefig("./plots/{}.png".format(file_name))
-
-    plt.clf()
-
 def create_neigbors_learners(data, n_neigh):
     # create two learners neighbors
     learner = NearestNeighbors(n_neighbors= n_neigh +1, metric='haversine', algorithm="ball_tree")
