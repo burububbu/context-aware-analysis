@@ -1,5 +1,8 @@
+# SCORE: R2 
+# 
+
 import os
-import utils
+import utils.utils
 
 from classes.dataset import Dataset
 from classes.models_handler import ModelsHandler
@@ -9,7 +12,7 @@ csv_train_data = "./data/train_data.csv"
 csv_test_data = "./data/test_data.csv"
 
 knn_params = {
-    'n_neighbors':[5, 10, 20, 30, 50, 60, 100, 150],
+    'n_neighbors':[5, 10, 20, 25, 30, 50, 60, 100, 150, 250],
     'weights': ['uniform', 'distance'],
 }
 
@@ -31,8 +34,6 @@ nn_params = {
 #     "learning_rates": [0.1]
 # }
 
-
-
 def main():
     dataset = Dataset()
 
@@ -47,10 +48,11 @@ def main():
 
     models_handler = ModelsHandler(dataset)
     
-    models_handler.create_models('knn', knn_params)
-    models_handler.create_models('rf', rf_params)
-    models_handler.create_models('sgd', {})
-    models_handler.create_neural_networks(nn_params)
+    models_handler.create_models_sets('knn', knn_params)
+    models_handler.create_models_sets('rf', rf_params)
+    models_handler.create_models_sets('sgd', {})
+
+    # models_handler.create_neural_networks(nn_params)
 
 
 

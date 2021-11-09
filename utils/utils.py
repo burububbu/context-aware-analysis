@@ -86,8 +86,15 @@ def _to_radiants(data):
     return data
 
 def create_neigbors_learners(data, n_neigh):
+
     # create two learners neighbors
     learner = NearestNeighbors(n_neighbors= n_neigh +1, metric='haversine', algorithm="ball_tree")
     learner.fit(data)
 
     return learner 
+
+def rae(actual, predicted):
+    ''' Relative absolute error '''
+    numerator = np.sum(np.abs(predicted - actual))
+    denominator = np.sum(np.abs(np.mean(actual) - actual))
+    return numerator / denominator

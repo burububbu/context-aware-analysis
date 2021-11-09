@@ -16,6 +16,9 @@ class Dataset:
 
         # features subset indices
         self.feat_subset_indices = None
+
+        self.sets = None
+        self.set_types = None
     
     @property
     def x_train_base(self):
@@ -33,6 +36,11 @@ class Dataset:
     def x_test_subset(self):
         return self.x_test.iloc[:, self.feat_subset_indices]
 
+    def get_set(self, name, type):
+        ''' name:  base, complete, sub
+            type: train, test
+        '''
+        return self.sets[f'{name}_{type}']
 
     def load_data(self, csv_path):
         ''' Load general data from csv'''
@@ -48,6 +56,8 @@ class Dataset:
         self.x_test = test_data[test_data.columns.drop('noise')]
         self.y_test = test_data['noise']
 
+        self._update_sets()
+
 
     def split(self, test_size, random_state):
         self.x_train, self.x_test, self.y_train, self.y_test = train_test_split(
@@ -55,6 +65,8 @@ class Dataset:
         self.data['noise'],
         test_size=test_size,
         random_state=random_state)
+
+        self._update_sets()
 
     def add_column_to_train(self, name, values):
         self.x_train[name] = values
@@ -74,5 +86,21 @@ class Dataset:
         ''' from train data '''
         features_selector = SelectKBest(f_regression, k = k_value).fit(self.x_train, self.y_train)
         self.feat_subset_indices = features_selector.get_support(indices=True)
+
+        self.sets['sub_train'] = self.x_train_subset
+        self.sets['sub_test'] = self.x_test_subset
+
+
+    def _update_sets(self):
+        self.set_types = ['base', 'complete', 'sub']
+
+        self.sets = {
+            'base_train': self.x_train_base,
+            'base_test' : self.x_test_base,
+            'complete_train': self.x_train,
+            'complete_test': self.x_test,
+        }
+
+
 
 

@@ -84,17 +84,19 @@ class ModelsHandler():
                 #     'minmax_scaling': estimator,
                 # }
 
-                estimators = self._train_models(
-                    self.models[model_name](),
+                estimators, metrics = self._train_models(
+                    model_name,
                     train_data,
+                    test_data,
                     params,
                     index_scaler)
                 
-                metrics = self.calc_statistics(estimators, train_data, test_data)
+                # metrics = self.calc_statistics(estimators, train_data, test_data)
 
                 # add rows for result dataframe
                 for prep_type in self.preprocessing_types:
                     list_metrics = [metrics[prep_type][metric_name] for metric_name in self.metrics_names]
+                    
                     results.append([
                         model_name,
                         set_type,
@@ -103,50 +105,46 @@ class ModelsHandler():
                         *list_metrics])
 
             results_df = pd.DataFrame(results, columns= self.results_columns)
+
+            print(results_df) 
             
             # self.plot_results(data, x, y, hue, model_name)
 
             results_df.to_csv(f'./results/{model_name}_results.csv')
-            
-            visualization_utils.plot_models_results()
 
         else:
             print(f'ERROR: {model_name} doesn''t exist')
 
-    def calc_statistics(self, models, x_train, x_test):
+    def calc_models_statistics(self, estimator, x_train, x_test):
         ''' calculate metrics for each estimator passed.
         
-            return {preprocessing_type1 :  metrics, preprocessing_type2 :  metrics}
+            return metrics as a dicts
         '''
+        predicted_train = estimator.predict(x_train)
+        predicted_test = estimator.predict(x_test)
 
-        all_metrics = {}
+        train_score = estimator.score(x_train, self.dataset.y_train)
+        test_score = estimator.score(x_test, self.dataset.y_test)
+    
+        return self._calc_statistics(train_score, test_score, predicted_train, predicted_test)
 
-        for preprocessing_type in self.preprocessing_types:
-            estimator = models[preprocessing_type] # get model with specific type of preprocessing (es. no_scalinf)
+    def _calc_statistics(self, train_score, test_score, predicted_train, predicted_test):
+        metrics = {
+        'r2_train': train_score,
+        'r2_test': test_score,  
 
-            # also preprocess these data
-            predicted_train = estimator.predict(x_train.values)
-            predicted_test = estimator.predict(x_test.values)
+        'mse_train': mean_squared_error(self.dataset.y_train, predicted_train),
+        'mse_test': mean_squared_error(self.dataset.y_test, predicted_test ),
 
-            metrics = {
-            'r2_train': estimator.score(x_train.values, self.dataset.y_train),
-            'r2_test': estimator.score(x_test.values, self.dataset.y_test),  
+        'rae_train': utils.rae(self.dataset.y_train, predicted_train),
+        'rae_test': utils.rae(self.dataset.y_test, predicted_test ),
+        }
+    
+        metrics['rmse_train'] = sqrt(metrics['mse_train']) 
+        metrics['rmse_test'] = sqrt(metrics['mse_test'])  
 
-            'mse_train': mean_squared_error(self.dataset.y_train, predicted_train),
-            'mse_test': mean_squared_error(self.dataset.y_test, predicted_test ),
-
-            'rae_train': utils.rae(self.dataset.y_train, predicted_train),
-            'rae_test': utils.rae(self.dataset.y_test, predicted_test ),
-            }
-        
-            metrics['rmse_train'] = sqrt(metrics['mse_train']) 
-            metrics['rmse_test'] = sqrt(metrics['mse_test'])  
-
-            all_metrics[preprocessing_type] = metrics
-
-        return all_metrics
-     
-
+        return metrics
+    
     def create_neural_networks(self, params):
         print('Neural network ...')
     
@@ -159,7 +157,7 @@ class ModelsHandler():
         print('\tSubset...')
         self._train_neural_networks(self.dataset.x_train_subset, self.dataset.x_test_subset, params, 2)
 
-    def _train_models(self, model, x_data, params, scaler_index):
+    def _train_models(self, model_name, x_train, x_test, params, scaler_index):
         '''
         Train a model three times, for each type of preprocessing available (no scaling, standard scaling, min max scaling).
         
@@ -167,27 +165,38 @@ class ModelsHandler():
             'no_scaling': estimator,
             'standard_scaling': estimator,
             'minmax_scaling': estimator,
+        }, {
+            'no_scaling': {metrics},
+            'standard_scaling': {metrics},
+            'minmax_scaling': {metrics},
         }
         
         '''
         models = {}
+        metrics = {}
 
-        standard_data = self.standard_scalers[scaler_index].transform(x_data)
-        minmax_data = self.minmax_scalers[scaler_index].transform(x_data)
+        standard_x_train = self.standard_scalers[scaler_index].transform(x_train)
+        minmax_x_train = self.minmax_scalers[scaler_index].transform(x_train)
+
+        standard_x_test = self.standard_scalers[scaler_index].transform(x_test)
+        minmax_x_test = self.minmax_scalers[scaler_index].transform(x_test)
          
         # test without scaling
-        best_params, best_score, models['no_scaling'] = self._cross_validating_model(model, x_data.values, params)
+        best_params, best_score, models['no_scaling'] = self._cross_validating_model(self.models[model_name](), x_train.values, params)
+        metrics['no_scaling'] = self.calc_models_statistics(models['no_scaling'], x_train.values, x_test.values)
         print(f'\t\t{best_score} score with params {best_params} and no scaling')
         
         # test with standard scaler
-        best_params, best_score, models['standard_scaling'] = self._cross_validating_model(model, standard_data, params)
+        best_params, best_score, models['standard_scaling'] = self._cross_validating_model(self.models[model_name](), standard_x_train, params)
+        metrics['standard_scaling'] = self.calc_models_statistics(models['standard_scaling'], standard_x_train, standard_x_test)
         print(f'\t\t{best_score} score with params {best_params} and standard scaler scaling')
 
         # test with min max scaler
-        best_params, best_score, models['minmax_scaling'] = self._cross_validating_model(model, minmax_data, params)
+        best_params, best_score, models['minmax_scaling'] = self._cross_validating_model(self.models[model_name](), minmax_x_train, params)
+        metrics['minmax_scaling'] = self.calc_models_statistics(models['minmax_scaling'], minmax_x_train, minmax_x_test)
         print(f'\t\t{best_score} score with params {best_params} and minmax scaler scaling')
 
-        return models
+        return models, metrics
 
     def _cross_validating_model(self, model, x_train_data, params):
         ''' Returns (best params, best r2 score, best estimator) '''
