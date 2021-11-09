@@ -13,7 +13,6 @@ def train_neural_networks(train_dataset, test_dataset, params):
     torch.manual_seed(42)
 
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
-    print(f'Training Neural Network (using {device} device)...')
 
     # generate all possible combinations 
     hyperparams = itertools.product(params['hidden_sizes'], params['nums_layers'], params['num_epochs'], params['batch_sizes'], params['learning_rates'])
@@ -37,11 +36,8 @@ def train_neural_networks(train_dataset, test_dataset, params):
         mse_train = None
 
         #train
-        for epoch in range(num_epoch):
-            mse_train = _train(train_dataloader, model, loss, optimizer, device)
-            
-            if (epoch+1) % num_epoch == 0:
-                print(f'\t\t\tMean train loss (mse): {mse_train}')
+        for _ in range(num_epoch):
+            mse_train = _train(train_dataloader, model, loss, optimizer, device) # then save last mse
 
         # test
         mse_test = _test(test_dataloader, model, loss, device)

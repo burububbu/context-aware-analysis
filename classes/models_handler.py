@@ -1,20 +1,15 @@
-from math import sqrt
-from sklearn import preprocessing
 from sklearn.model_selection import GridSearchCV
 from sklearn.neighbors import KNeighborsRegressor
 from sklearn.linear_model import SGDRegressor
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
-from torch.utils.data import dataset
 from sklearn.metrics import mean_squared_error
+
+from math import sqrt
 
 from classes.nn_classes import DatasetNN
 from utils import utils
-from itertools import chain
-
 import utils.nn_utils as nn_utils 
-import utils.visualization_utils as visualization_utils
-
 import pandas as pd
 
 class ModelsHandler():
@@ -143,14 +138,30 @@ class ModelsHandler():
     
     def create_neural_networks(self, params):
         print('Neural network ...')
-        
+
         for index_scaler, set_type in enumerate(self.dataset.set_types):
-                print(f'\t{set_type} set ...')    
+                print(f'\t{set_type} set ...')
+                
+                results_df = pd.DataFrame()
                 
                 train_data = self.dataset.get_set(set_type, 'train')
                 test_data = self.dataset.get_set(set_type, 'test')
     
-                self._train_neural_networks(train_data.values, test_data.values, params, index_scaler)
+                results = self._train_neural_networks(train_data, test_data, params, index_scaler)
+
+                for prep_type in self.preprocessing_types[:2]:
+                    temp_df = pd.DataFrame(results[prep_type], columns=self.results_columns[3:])    
+                    temp_df['preprocessing_type'] = prep_type
+                    
+                    results_df = results_df.append(temp_df)
+                    
+
+                results_df['dataset_type'] = set_type
+                results_df['model_type'] = 'neural_network'
+
+                results_df[self.results_columns].to_csv(f'./results/neural_network_{set_type}set.csv')
+
+                    
 
     def _train_models(self, model_name, x_train, x_test, params, scaler_index):
         '''
@@ -202,24 +213,24 @@ class ModelsHandler():
         return reg.best_params_, reg.best_score_, reg.best_estimator_
          
     def _train_neural_networks(self, x_data, x_test, params, index):
+        results = {}
         
         # testing without min max
-        print(x_data)
-        print('not scaled data')
+        print('\t\tNot scaled data')
         
-        train_data_nn = DatasetNN(x_data, self.dataset.y_train)
-        test_data_nn =DatasetNN(x_test, self.dataset.y_test)
+        train_data_nn = DatasetNN(x_data.values, self.dataset.y_train)
+        test_data_nn =DatasetNN(x_test.values, self.dataset.y_test)
         
-        nn_utils.train_neural_networks(train_data_nn, test_data_nn, params)
+        results['no_scaling']=nn_utils.train_neural_networks(train_data_nn, test_data_nn, params)
 
-        print('standardized data')
-
+        print('\t\tStandardized data')
         standardized_x_train = self.standard_scalers[index].transform(x_data)
         standardized_x_test = self.standard_scalers[index].transform(x_test)
 
         train_data_nn = DatasetNN(standardized_x_train, self.dataset.y_train)
         test_data_nn =DatasetNN(standardized_x_test, self.dataset.y_test)
         
-        nn_utils.train_neural_networks(train_data_nn, test_data_nn, params)
+        results['standard_scaling']=nn_utils.train_neural_networks(train_data_nn, test_data_nn, params)
 
+        return results
 
