@@ -1,3 +1,4 @@
+from collections import OrderedDict
 import torch
 import torch.nn as nn
 
@@ -18,26 +19,27 @@ class DatasetNN(Dataset):
 
 class NeuralNet(nn.Module):
     '''Neural network model'''
-    def __init__(self, input_size, hidden_size): 
+    def __init__(self, input_size, hidden_size, n_layers): 
         super(NeuralNet, self).__init__()
 
         self.input_size = input_size
         self.hidden_size = hidden_size
 
-        self.model = nn.Sequential(
-                nn.Linear(input_size, hidden_size),
-                nn.ReLU(),
-                
-                # nn.Dropout(dropout),
-                nn.Linear(hidden_size, hidden_size),
-                nn.ReLU(),
-                # nn.BatchNorm1d(hidden_size),
-                
-                nn.Linear(hidden_size, 1), # out size of 1 -> only 1 value predicted
-            )
+        # creating layers -----
+        layers = [
+            nn.Linear(input_size, hidden_size), 
+            nn.ReLU()
+        ]
 
+        for _ in range(n_layers):
+            layers.extend([nn.Linear(hidden_size, hidden_size), nn.ReLU()])
+        
+        layers.append(nn.Linear(hidden_size, 1))
+        #  --------
+
+        self.model = nn.Sequential(*layers)
+        
     def forward(self, x):
-        out = self.model(x)
-        return out
+        return self.model(x)
 
     

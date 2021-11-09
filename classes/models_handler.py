@@ -66,7 +66,7 @@ class ModelsHandler():
         '''
         
         if self.models[model_name] != None:
-            
+
             results = []
 
             print(f'{model_name} regressor...')
@@ -91,8 +91,6 @@ class ModelsHandler():
                     params,
                     index_scaler)
                 
-                # metrics = self.calc_statistics(estimators, train_data, test_data)
-
                 # add rows for result dataframe
                 for prep_type in self.preprocessing_types:
                     list_metrics = [metrics[prep_type][metric_name] for metric_name in self.metrics_names]
@@ -106,8 +104,6 @@ class ModelsHandler():
 
             results_df = pd.DataFrame(results, columns= self.results_columns)
 
-            print(results_df) 
-            
             # self.plot_results(data, x, y, hue, model_name)
 
             results_df.to_csv(f'./results/{model_name}_results.csv')
@@ -147,15 +143,14 @@ class ModelsHandler():
     
     def create_neural_networks(self, params):
         print('Neural network ...')
+        
+        for index_scaler, set_type in enumerate(self.dataset.set_types):
+                print(f'\t{set_type} set ...')    
+                
+                train_data = self.dataset.get_set(set_type, 'train')
+                test_data = self.dataset.get_set(set_type, 'test')
     
-        print('\tBase set...')
-        self._train_neural_networks(self.dataset.x_train_base, self.dataset.x_test_base, params, 0)
-        
-        print('\tComplete set...')
-        self._train_neural_networks(self.dataset.x_train, self.dataset.x_test, params, 1)
-        
-        print('\tSubset...')
-        self._train_neural_networks(self.dataset.x_train_subset, self.dataset.x_test_subset, params, 2)
+                self._train_neural_networks(train_data.values, test_data.values, params, index_scaler)
 
     def _train_models(self, model_name, x_train, x_test, params, scaler_index):
         '''
@@ -207,6 +202,17 @@ class ModelsHandler():
         return reg.best_params_, reg.best_score_, reg.best_estimator_
          
     def _train_neural_networks(self, x_data, x_test, params, index):
+        
+        # testing without min max
+        print(x_data)
+        print('not scaled data')
+        
+        train_data_nn = DatasetNN(x_data, self.dataset.y_train)
+        test_data_nn =DatasetNN(x_test, self.dataset.y_test)
+        
+        nn_utils.train_neural_networks(train_data_nn, test_data_nn, params)
+
+        print('standardized data')
 
         standardized_x_train = self.standard_scalers[index].transform(x_data)
         standardized_x_test = self.standard_scalers[index].transform(x_test)
