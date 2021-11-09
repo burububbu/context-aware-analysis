@@ -6,18 +6,24 @@ from sklearn.preprocessing import StandardScaler, MinMaxScaler
 
 from classes.nn_classes import DatasetNN
 
-import nn_utils as nn_utils 
+import utils.utils as utils
+import utils.nn_utils as nn_utils 
+import utils.visualization_utils as visualization_utils
+
+import pandas as pd
 
 class ModelsHandler():
 
     def __init__(self, dataset):
 
         ''' Init instance properties'''
-        self.models = {}
-        self.subset_models = {}
 
         self.dataset = dataset
 
+        # dataframe [model_type, dataset_type, preprocessing_type, params, score]
+        self.model_results = pd.DataFrame()
+        self.results_columns = ['model_type', 'dataset_type', 'preprocessing_type', 'params', 'score']
+        
         # init scalers (shared among instances)
         self.standard_scalers = [
             StandardScaler().fit(dataset.x_train_base),
@@ -36,22 +42,50 @@ class ModelsHandler():
             'sgd': SGDRegressor,
             'rf': RandomForestRegressor
         }
-    
+
     def create_models(self, model_name, params):
         
-        if self.models[model_name] != None:         
+        if self.models[model_name] != None:
+
+            to_plot_df = pd.DataFrame()
+            
             print(f'{model_name} regressor...')
             
             print('\tBase set ...')
-            self._train_models(self.models[model_name](), self.dataset.x_train_base, params, 0)
+            
+            to_plot_df = to_plot_df.append(
+                self._save_results(model_name, 'base_set', self._train_models(self.models[model_name](), self.dataset.x_train_base, params, 0)))
 
             print('\tComplete set ...')
-            self._train_models(self.models[model_name](), self.dataset.x_train, params, 1)
-            
+            to_plot_df = to_plot_df.append(
+                self._save_results(model_name, 'complete_set', self._train_models(self.models[model_name](), self.dataset.x_train, params, 1)))
+
             print('\tSubset ...')
-            self._train_models(self.models[model_name](), self.dataset.x_train_subset, params, 2)
+            to_plot_df = to_plot_df.append(
+                self._save_results(model_name, 'subset', self._train_models(self.models[model_name](), self.dataset.x_train_subset, params, 2)))
+
+            visualization_utils.plot_models_results(
+                            to_plot_df,
+                            'dataset_type',
+                            'score',
+                            'preprocessing_type',
+                            model_name
+                            )
         else:
             print(f'ERROR: {model_name} doesn''t exist')
+
+    def _save_results(self, model_type, dataset_type, params_score):
+        #     not scaled       standard          minmax
+        # [[params, score], [params, score], [params, score]]
+
+        data = []
+        for i, preprocessing_type in enumerate(['not_scaled', 'standard_scaled', 'minmax_scaled']):
+            data.append([model_type, dataset_type, preprocessing_type, params_score[i][0], params_score[i][1]])
+
+        res_dataframe = pd.DataFrame(data, columns=self.results_columns)
+        res_dataframe.to_csv(f'./results/{model_type}_{dataset_type}.csv')
+
+        return res_dataframe
 
     def create_neural_networks(self, params):
         print('Neural network ...')
@@ -64,6 +98,7 @@ class ModelsHandler():
         
         print('\tSubset...')
         self._train_neural_networks(self.dataset.x_train_subset, self.dataset.x_test_subset, params, 2)
+
 
     def _train_models(self, model, x_data, params, scaler_index):
         results = []
@@ -91,7 +126,7 @@ class ModelsHandler():
         reg = GridSearchCV(estimator = model, param_grid=params)
         reg.fit(x_train_data, self.dataset.y_train)
         
-        return reg.best_params_, reg.best_score_, reg.best_estimator_
+        return reg.best_params_, reg.best_score_
          
     def _train_neural_networks(self, x_data, x_test, params, index):
 
