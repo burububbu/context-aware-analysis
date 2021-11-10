@@ -20,10 +20,20 @@ rf_params = {
     'n_estimators': [200, 300, 500]
 }
 
+# not deep
 nn_params = {
-    "hidden_sizes": [5, 15, 30, 50, 100, 200],
-    "nums_layers": [1, 2, 5],
-    "num_epochs": [100, 300, 500, 1000],
+    "hidden_sizes": [5, 15, 30, 50, 100],
+    "nums_layers": [1, 2],
+    "num_epochs": [200, 500, 1000],
+    "batch_sizes": [64, 128],
+    "learning_rates": [0.1, 0.01, 0.001]
+}
+
+# deep
+nn_params = {
+    "hidden_sizes": [5, 15, 30],
+    "nums_layers": [3, 4, 6],
+    "num_epochs": [200, 500, 1000],
     "batch_sizes": [64, 128],
     "learning_rates": [0.1, 0.01, 0.001]
 }
