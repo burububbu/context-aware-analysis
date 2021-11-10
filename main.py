@@ -21,18 +21,12 @@ rf_params = {
 }
 
 nn_params = {
-    "hidden_sizes": [5, 10, 64],
-    "num_epochs": [50, 100, 500],
+    "hidden_sizes": [5, 15, 30, 50, 100, 200],
+    "nums_layers": [1, 2, 5],
+    "num_epochs": [100, 300, 500, 1000],
     "batch_sizes": [64, 128],
-    "learning_rates": [0.1, 0.001]
+    "learning_rates": [0.1, 0.01, 0.001]
 }
-
-# nn_params = {
-#     "hidden_sizes": [5, 10, 64],
-#     "num_epochs": [5],
-#     "batch_sizes": [64],
-#     "learning_rates": [0.1]
-# }
 
 def main():
     dataset = Dataset()
@@ -48,11 +42,11 @@ def main():
 
     models_handler = ModelsHandler(dataset)
     
-    models_handler.create_models_sets('knn', knn_params)
-    models_handler.create_models_sets('rf', rf_params)
-    models_handler.create_models_sets('sgd', {})
+    # models_handler.create_models_sets('knn', knn_params)
+    # models_handler.create_models_sets('rf', rf_params)
+    # models_handler.create_models_sets('sgd', {})
 
-    # models_handler.create_neural_networks(nn_params)
+    models_handler.create_neural_networks(nn_params)
 
 
 
