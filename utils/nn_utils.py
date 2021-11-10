@@ -20,9 +20,10 @@ def train_neural_networks(train_dataset, test_dataset, params):
     loss = nn.MSELoss()
 
     results = []
+
     # hyperparams tuning
     for hidden_size, num_layers, num_epoch, batch_size, learning_rate in hyperparams:
-        print(f'\t\tTraining model with {hidden_size} hidden size, {num_layers} layers, {num_epoch} epochs, {learning_rate} learning rate and {batch_size} as batch size')
+        print(f'\t\tTraining model with {hidden_size} hidden size, {num_layers+1 } layers, {num_epoch} epochs, {learning_rate} learning rate and {batch_size} as batch size')
 
         # create model
         model = NeuralNet(train_dataset.X.shape[1], hidden_size, num_layers).to(device)
@@ -56,15 +57,15 @@ def train_neural_networks(train_dataset, test_dataset, params):
         # construct rows
         params = {
             'hs': hidden_size,
-            'n_layers': num_layers,
-            'num_ephocs': num_epoch,
+            'n_layers': num_layers+1,
+            'num_epochs': num_epoch,
             'batch_size': batch_size,
             'lr': learning_rate
             }
 
         results.append([params, r2_train, r2_test, mse_train, mse_test, rmse_train, rmse_test, rae_train, rae_test])
 
-        return results
+    return results
         
 def _compute_statistics(dataloader, model, device):
     model.eval()
@@ -76,12 +77,11 @@ def _compute_statistics(dataloader, model, device):
         preds = preds.detach().cpu().numpy()
 
         y_data = dataloader.dataset.y.detach().cpu().numpy()
+        
         r2 = r2_score(y_data, preds)
         rae = utils.rae(y_data, preds)
 
     return r2, rae
-
-
 
 def _train(dataloader, model, loss_fn, optimizer, device):
     model.train() # set model model
