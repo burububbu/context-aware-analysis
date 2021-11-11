@@ -43,12 +43,14 @@ def train_neural_networks(train_dataset, test_dataset, params):
         train_dataloader = DataLoader(train_dataset, batch_size=batch_size)
         test_dataloader = DataLoader(test_dataset, batch_size=batch_size)
 
+        # TODO make them arrays and save them
         mse_train = None
+        epoc_loss = None
 
         # train
         for _ in range(num_epoch):
-            mse_train = _train(train_dataloader, model, loss,
-                               optimizer, device)  # then save last mse
+            mse_train, epoch_loss = _train(train_dataloader, model, loss,
+                                           optimizer, device)  # then save last mse
 
         # test
         mse_test = _test(test_dataloader, model, loss, device)
@@ -102,6 +104,7 @@ def _train(dataloader, model, loss_fn, optimizer, device):
 
     num_batches = len(dataloader)
     total_loss = 0
+    last_loss = 0
 
     for data, targets in dataloader:
         data, targets = data.to(device), targets.to(device)
@@ -116,8 +119,9 @@ def _train(dataloader, model, loss_fn, optimizer, device):
         optimizer.step()
 
         total_loss += loss.item()
+        last_loss = loss.item()
 
-    return total_loss/num_batches
+    return total_loss/num_batches, last_loss
 
 
 def _test(dataloader, model, loss_fn, device):

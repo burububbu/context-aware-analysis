@@ -1,0 +1,11 @@
+pandas
+scikit-learn
+scikit-learn-intelex
+pytorch
+cudatoolkit=11.3
+numpy
+sqlalchemy
+geoalchemy2
+dotenv
+matplotlib
+seaborn
