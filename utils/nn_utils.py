@@ -10,6 +10,8 @@ import torch
 import utils.utils as utils
 import itertools
 
+from utils.visualization_utils import plot_loss
+
 
 def train_neural_networks(train_dataset, test_dataset, params):
     torch.manual_seed(42)
@@ -67,7 +69,7 @@ def train_neural_networks(train_dataset, test_dataset, params):
         params = {
             'hs': hidden_size,
             'n_layers': num_layers+1,
-            'num_epochs': num_epoch,
+            'n_epochs': num_epoch,
             'batch_size': batch_size,
             'lr': learning_rate
         }
@@ -79,6 +81,8 @@ def train_neural_networks(train_dataset, test_dataset, params):
             tr_m['mse'], te_m['mse'],
             tr_m['rmse'], te_m['rmse'],
             tr_m['rae'], te_m['rae']])
+
+        plot_loss(mean_mse_epochs, params, 'mse')
 
     return results
 
