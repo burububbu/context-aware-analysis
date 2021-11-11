@@ -31,6 +31,8 @@ class ModelsHandler():
             'dataset_type',
             'preprocessing_type',
             'params',
+            'mean_mse_epochs',
+            'last_mse_epochs',
             *self.metrics_names
         ]
 
@@ -224,7 +226,7 @@ class ModelsHandler():
 
         return reg.best_params_, reg.best_score_, reg.best_estimator_
 
-    def _train_neural_networks(self, x_data, x_test, params, index, total_steps, standard_scaling=True, min_max_scaling=True, no_scaling=True):
+    def _train_neural_networks(self, x_data, x_test, params, index, standard_scaling=True, min_max_scaling=True, no_scaling=True):
         results = {}
 
         if no_scaling:
@@ -235,7 +237,7 @@ class ModelsHandler():
             test_data_nn = DatasetNN(x_test.values, self.dataset.y_test)
 
             results['no_scaling'] = nn_utils.train_neural_networks(
-                train_data_nn, test_data_nn, params, index, total_steps)
+                train_data_nn, test_data_nn, params)
 
         if standard_scaling:
             print('\t\tStandardized data')
@@ -249,7 +251,7 @@ class ModelsHandler():
             test_data_nn = DatasetNN(standardized_x_test, self.dataset.y_test)
 
             results['standard_scaling'] = nn_utils.train_neural_networks(
-                train_data_nn, test_data_nn, params, index, total_steps)
+                train_data_nn, test_data_nn, params)
 
         if min_max_scaling:
             print('\t\tMinmax data')
@@ -260,6 +262,6 @@ class ModelsHandler():
             test_data_nn = DatasetNN(minmax_x_test, self.dataset.y_test)
 
             results['minmax_scaling'] = nn_utils.train_neural_networks(
-                train_data_nn, test_data_nn, params, index, total_steps)
+                train_data_nn, test_data_nn, params)
 
         return results

@@ -1,6 +1,7 @@
 from math import sqrt
 from classes.nn_classes import NeuralNet
-from sklearn.metrics import r2_score
+from sklearn.metrics import r2_score, mean_squared_error
+
 from torch.utils.data import DataLoader
 
 import torch.nn as nn
@@ -43,29 +44,24 @@ def train_neural_networks(train_dataset, test_dataset, params):
         train_dataloader = DataLoader(train_dataset, batch_size=batch_size)
         test_dataloader = DataLoader(test_dataset, batch_size=batch_size)
 
-        # TODO make them arrays and save them
-        mse_train = None
-        epoc_loss = None
+        mean_mse_epochs = []
+        last_mse_epochs = []
 
         # train
         for _ in range(num_epoch):
-            mse_train, epoch_loss = _train(train_dataloader, model, loss,
-                                           optimizer, device)  # then save last mse
+            mean_mse_epoch, last_mse_epoch = _train(train_dataloader, model, loss,
+                                                    optimizer, device)
 
-        # test
-        mse_test = _test(test_dataloader, model, loss, device)
+            mean_mse_epochs.append(mean_mse_epoch)
+            last_mse_epochs.append(last_mse_epoch)
 
-        r2_train, rae_train = _compute_statistics(
-            train_dataloader, model, device)
-        r2_test, rae_test = _compute_statistics(test_dataloader, model, device)
+        tr_m = compute_metrics(train_dataloader, model, device)
+        te_m = compute_metrics(test_dataloader, model, device)
 
-        rmse_train = sqrt(mse_train)
-        rmse_test = sqrt(mse_test)
-
-        print(f'\t\t\tMean train loss: {mse_train}')
-        print(f'\t\t\tMean test loss: {mse_test}')
-        print(f'\t\t\tR2 train score: {r2_train}')
-        print(f'\t\t\tR2 test score: {r2_test}')
+        print('\t\t\tTrain loss: {}'.format(tr_m['mse']))
+        print('\t\t\tTest loss: {}'.format(te_m['mse']))
+        print('\t\t\tR2 train score: {}'.format(tr_m['r2']))
+        print('\t\t\tR2 test score: {}'.format(te_m['r2']))
 
         # construct rows
         params = {
@@ -76,13 +72,19 @@ def train_neural_networks(train_dataset, test_dataset, params):
             'lr': learning_rate
         }
 
-        results.append([params, r2_train, r2_test, mse_train,
-                       mse_test, rmse_train, rmse_test, rae_train, rae_test])
+        results.append([
+            params,
+            mean_mse_epochs, last_mse_epochs,
+            tr_m['r2'], te_m['r2'],
+            tr_m['mse'], te_m['mse'],
+            tr_m['rmse'], te_m['rmse'],
+            tr_m['rae'], te_m['rae']])
 
     return results
 
 
-def _compute_statistics(dataloader, model, device):
+def compute_metrics(dataloader, model, device):
+    ''' Return dics containing mse, rmse,  r2 and rae'''
     model.eval()
 
     with torch.no_grad():
@@ -93,13 +95,18 @@ def _compute_statistics(dataloader, model, device):
 
         y_data = dataloader.dataset.y.detach().cpu().numpy()
 
-        r2 = r2_score(y_data, preds)
-        rae = utils.rae(y_data, preds)
+    mse = mean_squared_error(y_data, preds)
 
-    return r2, rae
+    return {
+        'mse': mse,
+        'rmse': sqrt(mse),
+        'r2': r2_score(y_data, preds),
+        'rae': utils.rae(y_data, preds)
+    }
 
 
 def _train(dataloader, model, loss_fn, optimizer, device):
+    ''' Return mean loss over minibatch, loss of the last minibatch'''
     model.train()  # set model model
 
     num_batches = len(dataloader)

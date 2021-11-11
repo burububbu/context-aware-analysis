@@ -21,22 +21,30 @@ rf_params = {
 }
 
 # not deep
-nn_params = {
-    "hidden_sizes": [15, 30, 50, 100],
-    "nums_layers": [1, 2],
-    "num_epochs": [500, 1000],
-    "batch_sizes": [128, 256],
-    "learning_rates": [0.1, 0.01, 0.001]
-}
-
-# # deep
 # nn_params = {
-#     "hidden_sizes": [5, 15, 30],
-#     "nums_layers": [3, 4, 6],
+#     "hidden_sizes": [15, 30, 50, 100],
+#     "nums_layers": [1, 2],
 #     "num_epochs": [500, 1000],
 #     "batch_sizes": [128, 256],
 #     "learning_rates": [0.1, 0.01, 0.001]
 # }
+
+# # deep
+# nn_params = {
+#     "hidden_sizes": [5, 15, 30],
+#     "nums_layers": [6],
+#     "num_epochs": [500, 1000],
+#     "batch_sizes": [128, 256],
+#     "learning_rates": [0.1, 0.01, 0.001]
+# }
+
+nn_params = {
+    "hidden_sizes": [100],
+    "nums_layers": [1, 2],
+    "num_epochs": [10],
+    "batch_sizes": [128],
+    "learning_rates": [0.1]
+}
 
 
 def main():
