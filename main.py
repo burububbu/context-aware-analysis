@@ -19,8 +19,9 @@ rf_params = {
     'n_estimators': [200, 300, 500]
 }
 
+# MIGUEL version
 nn_params = {
-    "hidden_sizes": [50, 200],
+    "hidden_sizes": [200],
     "nums_layers": [1, 2],
     "num_epochs": [500, 1000],
     "batch_sizes": [256, 512],
@@ -29,8 +30,20 @@ nn_params = {
     "dropout": [0, 0.2]
 }
 
+
+# DONE (me)
 # nn_params = {
 #     "hidden_sizes": [100],
+#     "nums_layers": [1, 2],
+#     "num_epochs": [500, 1000],
+#     "batch_sizes": [256, 512],
+#     "learning_rates": [0.1],
+#     "gamma": [0.03, 0.05],  # lr decay
+#     "dropout": [0, 0.2]
+# }
+
+# nn_params = {
+#     "hidden_sizes": [50],  # this changes
 #     "nums_layers": [1, 2],
 #     "num_epochs": [500, 1000],
 #     "batch_sizes": [256, 512],
