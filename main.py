@@ -19,34 +19,23 @@ rf_params = {
     'n_estimators': [200, 300, 500]
 }
 
-# not deep
-# nn_params = {
-#     "hidden_sizes": [15, 30, 50, 100],
-#     "nums_layers": [1, 2],
-#     "num_epochs": [500, 1000],
-#     "batch_sizes": [128, 256],
-#     "learning_rates": [0.1, 0.01, 0.001]
-# }
-
-# # deep
 nn_params = {
-    "hidden_sizes": [100, 200],
+    "hidden_sizes": [50, 200],
     "nums_layers": [1, 2],
-    "num_epochs": [500, 800],
-    "batch_sizes": [128, 256],
+    "num_epochs": [500, 1000],
+    "batch_sizes": [256, 512],
     "learning_rates": [0.1],
-    "gamma": [0.01, 0.03, 0.05],  # lr decay
+    "gamma": [0.03, 0.05],  # lr decay
     "dropout": [0, 0.2]
 }
 
 # nn_params = {
-#     "hidden_sizes": [10],
-#     "nums_layers": [1],
-#     "num_epochs": [100],
-#     "batch_sizes": [128],
+#     "hidden_sizes": [100],
+#     "nums_layers": [1, 2],
+#     "num_epochs": [500, 1000],
+#     "batch_sizes": [256, 512],
 #     "learning_rates": [0.1],
-#     # "gamma": [0.01],
-#     "gamma": [0.01, 0.03, 0.05, 0.08],  # lr decay
+#     "gamma": [0.03, 0.05],  # lr decay
 #     "dropout": [0, 0.2]
 # }
 
