@@ -12,6 +12,8 @@ from utils import utils
 import utils.nn_utils as nn_utils
 import pandas as pd
 
+import os
+
 from utils.visualization_utils import plot_loss
 
 
@@ -176,8 +178,13 @@ class ModelsHandler():
             results_df['dataset_type'] = set_type
             results_df['model_type'] = 'neural_network'
 
+            path = f'./results/neural_network_{set_type}set.csv'
+
+            file_exists = os.path.exists(path)
+
+            # append to the existing file or create a new one
             results_df[self.results_columns].to_csv(
-                f'./results/neural_network_{set_type}set.csv')
+                path, mode='a' if file_exists else 'w', header=False if file_exists else True)
 
     def _train_models(self, model_name, x_train, x_test, params, scaler_index):
         '''
