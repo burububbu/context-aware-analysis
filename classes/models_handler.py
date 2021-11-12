@@ -12,6 +12,8 @@ from utils import utils
 import utils.nn_utils as nn_utils
 import pandas as pd
 
+from utils.visualization_utils import plot_loss
+
 
 class ModelsHandler():
 
@@ -156,8 +158,17 @@ class ModelsHandler():
 
             for prep_type in self.preprocessing_types:
                 if results.get(prep_type) != None:
+
+                    for result in results[prep_type]:
+                        # plot the loss over epochs
+                        plot_loss(result[1],  # mean mse
+                                  result[0],  # params
+                                  'mean_mse', set_type, prep_type)
+
+                    # save in dataframe
                     temp_df = pd.DataFrame(
                         results[prep_type], columns=self.results_columns[3:])
+
                     temp_df['preprocessing_type'] = prep_type
 
                 results_df = results_df.append(temp_df)

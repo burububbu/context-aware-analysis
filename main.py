@@ -1,7 +1,6 @@
-# SCORE: R2
-#
 
 import os
+
 import utils.utils
 
 from classes.dataset import Dataset
@@ -30,21 +29,26 @@ rf_params = {
 # }
 
 # # deep
-# nn_params = {
-#     "hidden_sizes": [5, 15, 30],
-#     "nums_layers": [6],
-#     "num_epochs": [500, 1000],
-#     "batch_sizes": [128, 256],
-#     "learning_rates": [0.1, 0.01, 0.001]
-# }
-
 nn_params = {
-    "hidden_sizes": [100],
+    "hidden_sizes": [100, 200],
     "nums_layers": [1, 2],
-    "num_epochs": [10],
-    "batch_sizes": [128],
-    "learning_rates": [0.1]
+    "num_epochs": [500, 800],
+    "batch_sizes": [128, 256],
+    "learning_rates": [0.1],
+    "gamma": [0.01, 0.03, 0.05],  # lr decay
+    "dropout": [0, 0.2]
 }
+
+# nn_params = {
+#     "hidden_sizes": [10],
+#     "nums_layers": [1],
+#     "num_epochs": [100],
+#     "batch_sizes": [128],
+#     "learning_rates": [0.1],
+#     # "gamma": [0.01],
+#     "gamma": [0.01, 0.03, 0.05, 0.08],  # lr decay
+#     "dropout": [0, 0.2]
+# }
 
 
 def main():
@@ -65,7 +69,6 @@ def main():
     # models_handler.create_models_sets('knn', knn_params)
     # models_handler.create_models_sets('rf', rf_params)
     # models_handler.create_models_sets('sgd', {})
-
     models_handler.create_neural_networks(nn_params)
 
 

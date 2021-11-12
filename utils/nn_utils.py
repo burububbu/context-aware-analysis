@@ -10,8 +10,6 @@ import torch
 import utils.utils as utils
 import itertools
 
-from utils.visualization_utils import plot_loss
-
 
 def train_neural_networks(train_dataset, test_dataset, params):
     torch.manual_seed(42)
@@ -20,27 +18,34 @@ def train_neural_networks(train_dataset, test_dataset, params):
 
     # generate all possible combinations
     hyperparams = itertools.product(params['hidden_sizes'], params['nums_layers'],
-                                    params['num_epochs'], params['batch_sizes'], params['learning_rates'])
+                                    params['num_epochs'], params['batch_sizes'], params['learning_rates'],
+                                    params['gamma'], params['dropout'])
 
     num_combinations = len(params['hidden_sizes']) * len(params['nums_layers']) * len(
-        params['num_epochs']) * len(params['batch_sizes']) * len(params['learning_rates'])
+        params['num_epochs']) * len(params['batch_sizes']) * len(params['learning_rates']) * len(params['gamma']) * len(params['dropout'])
 
     loss = nn.MSELoss()
 
     results = []
 
     # hyperparams tuning
-    for i, (hidden_size, num_layers, num_epoch, batch_size, learning_rate) in enumerate(hyperparams):
+    for i, (hidden_size, num_layers, num_epoch, batch_size, learning_rate, gamma, dropout) in enumerate(hyperparams):
         print(
             f'\t\t{i+1} / {num_combinations} ({round((i+1)/num_combinations*100,3)}%)')
         print(
-            f'\t\tTraining model with {hidden_size} hidden size, {num_layers+1 } layers, {num_epoch} epochs, {learning_rate} learning rate and {batch_size} as batch size')
+            f'\t\tTraining model with {hidden_size} hidden size, {num_layers+1 } layers, {num_epoch} epochs, {learning_rate} learning rate, {gamma} gamma, {dropout} dropout and {batch_size} as batch size')
 
         # create model
         model = NeuralNet(
-            train_dataset.X.shape[1], hidden_size, num_layers).to(device)
+            train_dataset.X.shape[1], hidden_size, num_layers, dropout).to(device)
 
-        optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate)
+        optimizer = torch.optim.SGD(
+            model.parameters(), lr=learning_rate)
+
+        # scheduler fo learning rate decay
+        def lambda1(epoch): return 1 / (1 + gamma * epoch)
+        scheduler = torch.optim.lr_scheduler.LambdaLR(
+            optimizer, lr_lambda=lambda1)
 
         # create Dataloader
         train_dataloader = DataLoader(train_dataset, batch_size=batch_size)
@@ -53,6 +58,9 @@ def train_neural_networks(train_dataset, test_dataset, params):
         for _ in range(num_epoch):
             mean_mse_epoch, last_mse_epoch = _train(train_dataloader, model, loss,
                                                     optimizer, device)
+
+            # decrease the learning rate after each epoch
+            scheduler.step()
 
             mean_mse_epochs.append(mean_mse_epoch)
             last_mse_epochs.append(last_mse_epoch)
@@ -70,8 +78,10 @@ def train_neural_networks(train_dataset, test_dataset, params):
             'hs': hidden_size,
             'n_layers': num_layers+1,
             'n_epochs': num_epoch,
-            'batch_size': batch_size,
-            'lr': learning_rate
+            'b_size': batch_size,
+            'l_rate': learning_rate,
+            'gamma': gamma,
+            'dropout': dropout
         }
 
         results.append([
@@ -81,8 +91,6 @@ def train_neural_networks(train_dataset, test_dataset, params):
             tr_m['mse'], te_m['mse'],
             tr_m['rmse'], te_m['rmse'],
             tr_m['rae'], te_m['rae']])
-
-        plot_loss(mean_mse_epochs, params, 'mse')
 
     return results
 
@@ -135,18 +143,18 @@ def _train(dataloader, model, loss_fn, optimizer, device):
     return total_loss/num_batches, last_loss
 
 
-def _test(dataloader, model, loss_fn, device):
-    model.eval()
+# def _test(dataloader, model, loss_fn, device):
+#     model.eval()
 
-    num_batches = len(dataloader)
-    total_loss = 0
+#     num_batches = len(dataloader)
+#     total_loss = 0
 
-    with torch.no_grad():
-        for data, targets in dataloader:
-            data, targets = data.to(device), targets.to(device)
+#     with torch.no_grad():
+#         for data, targets in dataloader:
+#             data, targets = data.to(device), targets.to(device)
 
-            prediction = model(data)
-            loss = loss_fn(prediction.flatten(), targets)
-            total_loss += loss.item()
-
-    return total_loss/num_batches
+#             prediction = model(data)
+#             loss = loss_fn(prediction.flatten(), targets)
+#             total_loss += loss.item()
+#
+#    return total_loss/num_batches
