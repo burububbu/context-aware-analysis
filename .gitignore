@@ -1,6 +1,6 @@
 *.env
 __pycache__/
 
-data/
-plots/*
-results/*
+data/*.csv
+plots/*.png
+results/*.csv
