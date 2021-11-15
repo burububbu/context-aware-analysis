@@ -99,3 +99,17 @@ def rae(actual, predicted):
     numerator = np.sum(np.abs(predicted - actual))
     denominator = np.sum(np.abs(np.mean(actual) - actual))
     return numerator / denominator
+
+def unify_results(path_results_to_add):
+    for name in ['neural_network_baseset.csv', 'neural_network_completeset.csv', 'neural_network_subset.csv']:
+        my_df = pd.read_csv(f'./results/{name}', index_col=[0])
+
+        to_add_df = pd.read_csv(
+            f'./results/{path_results_to_add}/{name}', index_col=[0])
+
+        my_df = my_df.append(to_add_df)
+        my_df = my_df.reset_index(drop=True)
+
+        # overwrite files
+        my_df.to_csv(f'./results/{name}')
+

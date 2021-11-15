@@ -5,16 +5,16 @@ from sklearn.ensemble import RandomForestRegressor
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
 from sklearn.metrics import mean_squared_error
 
+
 from math import sqrt
 
+from utils.visualization_utils import plot_loss
 from classes.nn_classes import DatasetNN
 from utils import utils
 import utils.nn_utils as nn_utils
 import pandas as pd
 
 import os
-
-from utils.visualization_utils import plot_loss
 
 
 class ModelsHandler():
