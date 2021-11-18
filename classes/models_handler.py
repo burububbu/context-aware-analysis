@@ -30,13 +30,21 @@ class ModelsHandler():
         self.preprocessing_types = ['no_scaling',
                                     'standard_scaling', 'minmax_scaling']
 
-        self.results_columns = [
+        self.nn_results_columns = [
             'model_type',
             'dataset_type',
             'preprocessing_type',
             'params',
             'mean_mse_epochs',
             'last_mse_epochs',
+            *self.metrics_names
+        ]
+
+        self.ml_results_columns = [
+            'model_type',
+            'dataset_type',
+            'preprocessing_type',
+            'params',
             *self.metrics_names
         ]
 
@@ -105,9 +113,9 @@ class ModelsHandler():
                         estimators[prep_type].get_params(),
                         *list_metrics])
 
-            results_df = pd.DataFrame(results, columns=self.results_columns)
-
-            # self.plot_results(data, x, y, hue, model_name)
+            results_df = pd.DataFrame(
+                results,
+                columns=self.ml_results_columns)
 
             results_df.to_csv(f'./results/{model_name}_results.csv')
 
@@ -169,7 +177,7 @@ class ModelsHandler():
 
                     # save in dataframe
                     temp_df = pd.DataFrame(
-                        results[prep_type], columns=self.results_columns[3:])
+                        results[prep_type], columns=self.nn_results_columns[3:])
 
                     temp_df['preprocessing_type'] = prep_type
 
@@ -183,7 +191,7 @@ class ModelsHandler():
             file_exists = os.path.exists(path)
 
             # append to the existing file or create a new one
-            results_df[self.results_columns].to_csv(
+            results_df[self.nn_results_columns].to_csv(
                 path, mode='a' if file_exists else 'w', header=False if file_exists else True)
 
     def _train_models(self, model_name, x_train, x_test, params, scaler_index):

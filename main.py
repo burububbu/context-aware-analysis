@@ -1,7 +1,7 @@
 
 import os
 
-import utils.utils
+import utils.utils as utils
 
 from classes.dataset import Dataset
 from classes.models_handler import ModelsHandler
@@ -19,38 +19,20 @@ rf_params = {
     'n_estimators': [200, 300, 500]
 }
 
-# MIGUEL version
-nn_params = {
-    "hidden_sizes": [200],
-    "nums_layers": [1, 2],
-    "num_epochs": [500, 1000],
-    "batch_sizes": [256, 512],
-    "learning_rates": [0.1],
-    "gamma": [0.03, 0.05],  # lr decay
-    "dropout": [0, 0.2]
+sgd_params = {
+    'early_stopping': [True, False],
+    'alpha': [10.0**-n for n in range(7)]
 }
 
-
-# DONE (me)
-# nn_params = {
-#     "hidden_sizes": [100],
-#     "nums_layers": [1, 2],
-#     "num_epochs": [500, 1000],
-#     "batch_sizes": [256, 512],
-#     "learning_rates": [0.1],
-#     "gamma": [0.03, 0.05],  # lr decay
-#     "dropout": [0, 0.2]
-# }
-
-# nn_params = {
-#     "hidden_sizes": [50],  # this changes
-#     "nums_layers": [1, 2],
-#     "num_epochs": [500, 1000],
-#     "batch_sizes": [256, 512],
-#     "learning_rates": [0.1],
-#     "gamma": [0.03, 0.05],  # lr decay
-#     "dropout": [0, 0.2]
-# }
+nn_params = {
+    "hidden_sizes": [5, 10],
+    "nums_layers": [8],
+    "num_epochs": [1000],
+    "batch_sizes": [512],
+    "learning_rates": [0.1],
+    "gamma": [0.05],  # lr decay
+    "dropout": [0, 0.2]
+}
 
 
 def main():
@@ -68,9 +50,9 @@ def main():
 
     models_handler = ModelsHandler(dataset)
 
-    # models_handler.create_models_sets('knn', knn_params)
-    # models_handler.create_models_sets('rf', rf_params)
-    # models_handler.create_models_sets('sgd', {})
+    models_handler.create_models_sets('knn', knn_params)
+    models_handler.create_models_sets('rf', rf_params)
+    models_handler.create_models_sets('sgd', sgd_params)
     models_handler.create_neural_networks(nn_params)
 
 
