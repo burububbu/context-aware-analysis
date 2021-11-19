@@ -9,3 +9,5 @@ plots/*/*.png
 
 results/*.csv
 results/*/*.csv
+
+.vscode/
