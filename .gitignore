@@ -11,3 +11,4 @@ results/*.csv
 results/*/*.csv
 
 .vscode/
+.ipynb_checkpoints/
