@@ -1,6 +1,7 @@
-from flask import Flask, request
+from flask import Flask, request, jsonify
 from utils import getSubDatasets, minMaxScaling, linearCombination
 
+import distutils.util
 import os
 import pandas as pd
 import numpy as np
@@ -14,49 +15,34 @@ qosDf = pd.read_csv((os.path.join('csvs', f'qos.csv')), index_col=[0])
 
 @app.route("/")
 def tradeOff():
-    alpha = request.args.get('alpha')
-    privacySubDf = getSubDatasets(privacyDf)
-    qosSubDf = getSubDatasets(qosDf)
+    alpha = float(request.args.get('alpha'))
+    dummyUpdates = bool(distutils.util.strtobool(request.args.get('dummyUp')))
+    gpsPerturbated = bool(distutils.util.strtobool(
+        request.args.get('gpsPert')))
 
-    pValues = privacyDf["avg"]
-    qosValues = pd.Series([pow(el, -1) for el in qosDf["mse"]])
+    if(dummyUpdates == False and gpsPerturbated == False):
+        return "No Trade-Off of Privacy-QoS to false dummyUpdates and gpsPerturbator"
 
-    privacyScaled = minMaxScaling(pValues)
-    qosScaled = minMaxScaling(qosValues)
+    privacySub = getSubDatasets(privacyDf, dummyUpdates, gpsPerturbated)
+    qosSub = getSubDatasets(qosDf, dummyUpdates, gpsPerturbated)
 
-    pSubDfValues = [df["avg"] for df in privacySubDf]
-    qosSubDfValues = [pd.Series([pow(el, -1)
-                                for el in df["mse"]]) for df in qosSubDf]
+    privacySub["avg"] = minMaxScaling(privacySub["avg"])
+    qosSub["mse"] = minMaxScaling(
+        pd.Series([pow(el, -1) for el in qosSub["mse"]]))
 
-    privacySDScaled = [minMaxScaling(values) for values in pSubDfValues]
-    qosSDScaled = [minMaxScaling(values) for values in qosSubDfValues]
+    print("----------Trade-Off Privacy-QoS----------")
+    privacyQos = getTradeOff(alpha, privacySub, qosSub)
 
-    print("----------Complete Dataset----------")
-    privacyQos = getTradeOff(float(alpha), privacyScaled, qosScaled, qosDf)
-
-    privacyQosSD = []
-    for ind, df1 in enumerate(privacySDScaled):
-        print("----------Sub-dataset", ind+1, "----------")
-        privacyQosSD.append(getTradeOff(
-            float(alpha), df1, qosSDScaled[ind], qosSubDf[ind]))
-
-    return str(privacyQos) + str(privacyQosSD)
+    return privacyQos
 
 
-def getTradeOff(alpha, df1, df2, mainDf):
-    dfs = [pd.DataFrame([linearCombination(alpha, val, df2[ind])
-                        for ind, val in enumerate(df1)], columns=["values"])]
+def getTradeOff(alpha, privacy, qos):
+    allTradeOff = [linearCombination(alpha, val, qos["mse"][ind])
+                   for ind, val in enumerate(privacy["avg"])]
 
-    toRet = []
+    privacy["tradeOff"] = allTradeOff
+    qos["tradeOff"] = allTradeOff
 
-    for i, df in enumerate(dfs):
-        ind, = df.index[df["values"] == np.max(df["values"])]
+    ind, = privacy.index[privacy["tradeOff"] == np.max(privacy["tradeOff"])]
 
-        toRet.append(mainDf["dumRadMin"][ind])
-        toRet.append(mainDf["dumRadStep"][ind])
-        toRet.append(mainDf["pertDec"][ind])
-
-        print("Alpha: ", alpha, "\tPrivacy-QoS tradeoff: ", mainDf["dumRadMin"]
-              [ind], " - ", mainDf["dumRadStep"][ind], " - ", mainDf["pertDec"][ind])
-
-    return toRet
+    return jsonify(dummyMin=int(privacy["dumRadMin"][ind]), dummyCount=10, dummyStep=int(privacy["dumRadStep"][ind]), pertDecimals=int(privacy["pertDec"][ind]))
