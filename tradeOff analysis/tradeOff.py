@@ -15,7 +15,12 @@ qosDf = pd.read_csv((os.path.join('csvs', f'qos.csv')), index_col=[0])
 
 @app.route("/")
 def tradeOff():
-    alpha = float(request.args.get('alpha'))
+    alpha = request.args.get('alpha')
+    if(alpha == None):
+        return "No alpha set"
+    else:
+        alpha = float(alpha)
+
     dummyUpdates = bool(distutils.util.strtobool(request.args.get('dummyUp')))
     gpsPerturbated = bool(distutils.util.strtobool(
         request.args.get('gpsPert')))
@@ -43,6 +48,6 @@ def getTradeOff(alpha, privacy, qos):
     privacy["tradeOff"] = allTradeOff
     qos["tradeOff"] = allTradeOff
 
-    ind, = privacy.index[privacy["tradeOff"] == np.max(privacy["tradeOff"])]
+    tradeOff = privacy[privacy["tradeOff"] == np.max(privacy["tradeOff"])]
 
-    return jsonify(dummyMin=int(privacy["dumRadMin"][ind]), dummyCount=10, dummyStep=int(privacy["dumRadStep"][ind]), pertDecimals=int(privacy["pertDec"][ind]))
+    return jsonify(dummyMin=int(tradeOff["dumRadMin"]), dummyCount=10, dummyStep=int(tradeOff["dumRadStep"]), pertDecimals=int(tradeOff["pertDec"]))
