@@ -9,8 +9,8 @@ def linearCombination(alpha, privacy, qos):
     return alpha * privacy + (1-alpha) * qos
 
 
-def minMaxScaling(df):
-    min = np.min(df)
-    max = np.max(df)
+def minMaxScaling(serie):
+    min = np.min(serie)
+    max = np.max(serie)
 
-    return (df - min) / (max - min)
+    return (serie - min) / (max - min)
