@@ -1,14 +1,12 @@
-*.env
+# Byte-compiled / optimized / DLL files
 __pycache__/
 
-data/*.csv
-data/*/*.csv
+# and all subfolders
+*data/**/*.*
+results/**/*.*
 
-plots/*.png
-plots/*/*.png
+# exclude gitkeep
+!**/.gitkeep
 
-results/*.csv
-results/*/*.csv
-
-.vscode/
-.ipynb_checkpoints/
+.env
+const.py
