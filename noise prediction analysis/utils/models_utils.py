@@ -1,18 +1,15 @@
-import pandas as pd
-from sklearn.model_selection import GridSearchCV
-from sklearn.metrics import mean_squared_error
-from math import sqrt
-from math import sqrt
-from sklearn.metrics import r2_score, mean_squared_error
-
-from torch.utils.data import DataLoader
+import itertools
+import torch
 
 import torch.nn as nn
-import torch
+import pandas as pd
+
+from sklearn.metrics import r2_score, mean_squared_error
+from sklearn.model_selection import GridSearchCV
+from torch.utils.data import DataLoader
+from math import sqrt
+
 from utils.nn_classes import NeuralNet
-import itertools
-from functools import reduce
-import torch
 
 
 def train_models(model, x_train, y_train, x_test, y_test, hyperparams, standard_scaler, minmax_scaler):

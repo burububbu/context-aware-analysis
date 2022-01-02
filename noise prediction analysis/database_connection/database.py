@@ -1,5 +1,5 @@
 
-from database.schemas import Noise
+from database_connection.schemas import Noise
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine, func
 

@@ -1,21 +1,19 @@
-import pandas as pd
-import numpy as np
-from sqlalchemy.sql.sqltypes import String
-import database_connection.database as db
-
-from utils.dataset import Dataset
-
-from sklearn.neighbors import NearestNeighbors
-
-from dotenv import load_dotenv, find_dotenv
-
-from utils.dataset import Dataset
 import const
 import os
 
-from sklearn.model_selection import train_test_split
+import pandas as pd
+import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
+
+import database_connection.database as db
+
+from sqlalchemy.sql.sqltypes import String
+from utils.dataset import Dataset
+from sklearn.neighbors import NearestNeighbors
+from dotenv import load_dotenv, find_dotenv
+from utils.dataset import Dataset
+from sklearn.model_selection import train_test_split
 
 from utils.nn_classes import DatasetNN
 
