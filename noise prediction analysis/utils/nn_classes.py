@@ -1,4 +1,3 @@
-
 import torch
 import torch.nn as nn
 
@@ -27,20 +26,22 @@ class NeuralNet(nn.Module):
         self.input_size = input_size
         self.hidden_size = hidden_size
 
-        # creating layers -----
+        # first input layer
         layers = [
             nn.Linear(input_size, hidden_size),
             nn.ReLU()
         ]
 
+        # add hidden layer
         for _ in range(n_layers):
             if dropout > 0:
                 layers.append(nn.Dropout(dropout))
 
-            layers.extend([nn.Linear(hidden_size, hidden_size), nn.ReLU()])
+            new_layer = [nn.Linear(hidden_size, hidden_size), nn.ReLU()]
+            layers.extend(new_layer)
 
+        # add output layer
         layers.append(nn.Linear(hidden_size, 1))
-        
 
         self.model = nn.Sequential(*layers)
 
